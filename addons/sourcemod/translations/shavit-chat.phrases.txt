@@ -4,84 +4,104 @@
 	"ChatUpdated"
 	{
 		"en"		"Setting updated."
+		"chi"		"设置已更新."
 	}
 	"ChatCurrent"
 	{
 		"#format"	"{1:s}"
 		"en"		"Current setting: {1}"
+		"chi"		"当前设置: {1}"
 	}
 	"NameOff"
 	{
 		"en"		"Custom chat name is now off."
+		"chi"		"自定义聊天昵称已禁用."
 	}
 	"MessageOff"
 	{
 		"en"		"Custom chat text color is now off."
+		"chi"		"自定义聊天颜色已禁用."
 	}
 	"CheckConsole"
 	{
 		"en"		"Check your console."
+		"chi"		"请查看控制台输出."
 	}
 	"CCAccessGrantedToPlayer"
 	{
 		"#format"   "{1:s},{2:s}"
 		"en"        "You've been given access to custom chat! Use {1}!cchelp{2} for more info."
+		"chi"       "自定义聊天样式可用! 输入{1}!cchelp{2}查看更多讯息."
 	}
 	"CCHelp_Intro"
 	{
 		"en"		"- You have access to custom chat.\nUsage information:"
+		"chi"		"- 你有权限设置自定义聊天样式.\n使用帮助:"
 	}
 	"CCHelp_Generic"
 	{
 		"en"		"- !ccname can be used to change your custom chat name. Use \"!ccname off\" to toggle it off.\n- !ccmsg can be used to change your custom message prefix/color. Use \"!ccmsg off\" to toggle it off.\nThere are custom variables, such as:"
+		"chi"		"- !ccname - 更改自定义昵称.(输入\"!ccname off\"可恢复默认, 需要在!chatrank中将聊天样式改为自定义才能使用)\n- !ccmsg - 更改聊天讯息前缀或颜色.(输入\"!ccmsg off\"可恢复默认)\n以下是一些可用的自定义变量标签:"
 	}
 	"CCHelp_GenericVariables"
 	{
 		"en"		"- {name} - your in-game name.\n- {clan} - your clan tag.\n- {rand} - a random color.\n- {team} - your team color.\n- {green} - green color."
+		"chi"		"- {name} - 玩家昵称.\n- {clan} - 你的战队标签.\n- {rand} - 随机颜色.\n- {team} - 队伍主题色.\n- {green} - 绿色."
 	}
 	"CCHelp_CSS_1"
 	{
 		"en"		"- To use a custom color, write ^RRGGBB (HEX/HTML colors). For example, ^FFFFFF is white and ^000000 is black."
+		"chi"		"- 如需应用自定义颜色, 添加标签\"^RRGGBB\"(16进制HTML格式). 例如: ^FFFFFF - 白色, ^000000 - 黑色."
 	}
 	"CCHelp_CSS_2"
 	{
 		"en"		"- You can also use a set alpha (opacity in HEX, where FF is 255). &RRGGBBAA. For example, &FFFFFF7F is 127 alpha, so all text after the color will have 50% opacity."
+		"chi"		"- 你也可以添加颜色标签\"&RRGGBBAA\"来设置字体透明度(16进制格式, AA为00时为全透明). 例如: &FFFFFF7F可将字体设置为50%透明度白色."
 	}
 	"CCHelp_CSGO_1"
 	{
 		"en"		"- The following colors are also available: {blue}, {bluegrey}, {darkblue}, {darkred}, {gold}, {grey}, {grey2}, {lightgreen}, {lightred}, {lime}, {orchid}, {yellow} and {palered}."
+		"chi"		"- 可使用的颜色: {blue}, {bluegrey}, {darkblue}, {darkred}, {gold}, {grey}, {grey2}, {lightgreen}, {lightred}, {lime}, {orchid}, {yellow} and {palered}."
 	}
 	// ---------- Menu ---------- //
 	"SelectChatRank"
 	{
 		"en"		"Select chat rank:\n"
+		"chi"		"选择聊天样式:\n"
 	}
 	"SelectChatRankType"
 	{
 		"en"        "Which chat ranks do you want to see?\n"
+		"chi"       "选择要查看的聊天样式:\n"
 	}
 	"SelectChatRankUnlocked"
 	{
 		"en"        "Unlocked chat ranks\n"
+		"chi"       "已解锁的聊天样式\n"
 	}
 	"SelectChatRankAll"
 	{
 		"en"        "All chat ranks\n"
+		"chi"       "所有聊天样式一览\n"
 	}
 	"AutoAssign"
 	{
 		"en"		"Auto-assign\nAutomatically assign using your rank."
+		"chi"		"自动设定\n根据你的排行自动设置聊天样式."
 	}
 	"CustomChat"
 	{
 		"en"		"Custom\nUse custom chat settings. See !cchelp for more information."
+		"chi"		"自定义\n使用自定义聊天样式. 输入!cchelp查看帮助"
 	}
 	"ChatRanksMenu"
 	{
 		"en"		"Obtainable chat ranks:\nSelect an entry to preview.\n"
+		"chi"		"可获得的聊天样式:\n可选择一个样式预览.\n"
 	}
 	"ChatRanksMenu_SampleText"
 	{
 		"en"		"The quick brown fox jumps over the lazy dog"
+		"chi"		"Lorem ipsum是指一篇常用于排版设计领域的拉丁文文章，主要的目的为测试文章或文字在不同字型、版型下看起来的效果。"
 	}
 }

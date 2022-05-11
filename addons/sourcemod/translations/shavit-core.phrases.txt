@@ -5,145 +5,174 @@
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"Autobhop {1}enabled{2}."
+		"chi"		"自动跳跃已{1}启用{2}."
 	}
 	"AutobhopDisabled"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"Autobhop {1}disabled{2}."
+		"chi"		"自动跳跃{1}禁用{2}."
 	}
 	"CheatTimerStop"
 	{
 		"#format"	"{1:s},{2:s},{3:s}"
 		"en"		"{1}Timer stopped! {2}{3}"
+		"chi"		"{1}计时中止! {2}{3}"
 	}
 	"CommandDisabled"
 	{
 		"#format" 	"{1:s},{2:s},{3:s}"
 		"en"		"The command ({1}{2}{3}) is disabled."
+		"chi"		"指令 ({1}{2}{3}) 已禁用."
 	}
 	"StyleNoAccess"
 	{
 		"#format" 	"{1:s},{2:s}"
 		"en"		"You lack the {1}permissions{2} for this style."
+		"chi"		"你没有{1}权限{2}游玩该模式."
 	}
 	"NoEditingTimescale"
 	{
 		"en"        "This style doesn't allow you to change timescale."
+		"chi"       "该模式无法修改时延值."
 	}
 	// ---------- Errors ---------- //
 	"VerificationFailed"
 	{
 		"en"		"Couldn't verify your, or the server's connection to Steam."
+		"chi"		"无法验证你或服务器与Steam的连接."
 	}
 	"TimeUnderMinimumTime"
 	{
 		"#format"   "{1:f},{2:f},{3:s}"
 		"en"        "Your time ({2}) was faster than the style's {3} setting ({1}) and did not count."
+		"chi"       "你的通关时间 ({2}) 快于{3}最快通关时间设置 ({1}), 纪录不作数."
 	}
 	// ---------- Menus ---------- //
 	"StyleMenuTitle"
 	{
 		"en"		"Choose a style:"
+		"chi"		"选择游戏模式:"
 	}
 	"StyleSelection"
 	{
 		"#format"	"{1:s},{2:s},{3:s}"
 		"en"		"You have chosen to play {1}{2}{3}."
+		"chi"		"游戏模式已更改为: {1}{2}{3}."
 	}
 	"StyleUnranked"
 	{
 		"en"		"[Unranked]"
+		"chi"		"[无排名]"
 	}
 	// ---------- Misc ---------- //
 	"LeftRightCheat"
 	{
 		"en"		"Detected +left/right on a disallowed style."
+		"chi"		"该模式下+left/right禁用."
 	}
 	"Inconsistencies"
 	{
 		"en"		"Detected inconsistencies in button presses."
+		"chi"		"检测到非法按键."
 	}
 	"UnrankedWarning"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"{1}WARNING: {2}This style is unranked. Your times WILL NOT be saved and will be only displayed to you!"
+		"chi"		"{1}注意: {2}该模式不记录排名. 通关后计时不会被记录且通关信息仅对自己显示!"
 	}
 	"PracticeModeAlert"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"{1}WARNING: {2}You're now in practice mode. Your times WILL NOT be saved and will be only displayed to you!"
+		"chi"		"{1}注意: {2}你现在处于练习模式. 通关后计时不会被记录且通关信息仅对自己显示!"
 	}
 	"SHSWCombination0"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"Your SHSW combination is {1}W/A & S/D{2}."
+		"chi"		"你当前的滑翔半侧跳按键组合: {1}W/A & S/D{2}."
 	}
 	"SHSWCombination1"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"Your SHSW combination is {1}W/D & S/A{2}."
+		"chi"		"你当前的滑翔半侧跳按键组合: {1}W/D & S/A{2}."
 	}
 	"NewAiraccelerate"
 	{
 		"#format"	"{1:d},{2:s},{3:d},{4:s}"
 		"en"		"Your airacceleration has been changed from {1} to {2}{3}{4}."
+		"chi"		"当前空速: {1} -> {2}{3}{4}."
 	}
 	// ---------- Pauses ---------- //
 	"MessagePause"
 	{
 		"#format"	"{1:s},{2:s},{3:s}"
 		"en"		"{1}Timer has been {2}paused{3}."
+		"chi"		"{1}计时已{2}暂停{3}."
 	}
 	"MessageUnpause"
 	{
 		"#format"	"{1:s},{2:s},{3:s}"
 		"en"		"{1}Timer has been {2}resumed{3}."
+		"chi"		"{1}计时已{2}解除暂停{3}."
 	}
 	"PauseNotOnGround"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"You {1}are not{2} allowed to pause when not on ground."
+		"chi"		"空中{1}无法{2}暂停."
 	}
 	"PauseStartZone"
 	{
 		"#format"	"{1:s},{2:s},{3:s},{4:s},{5:s}"
 		"en"		"{1}You {2}cannot{3} pause in the {4}start zone{5}."
+		"chi"		"{4}起点{2}无法{3}暂停."
 	}
 	"PauseEndZone"
 	{
 		"#format"	"{1:s},{2:s},{3:s},{4:s},{5:s}"
 		"en"		"{1}You {2}cannot{3} pause in the {4}end zone{5}."
+		"chi"		"{4}终点{2}无法{3}暂停."
 	}
 	"PauseMoving"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"You {1}are not{2} allowed to pause while moving."
+		"chi"		"移动时{1}无法{2}暂停."
 	}
 	"PauseDuck"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"You {1}are not{2} allowed to pause while crouching."
+		"chi"		"蹲下时{1}无法{2}暂停."
 	}
 	"TimerUnpaused"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"Timer has been {1}unpaused{2}."
+		"chi"		"计时已解除{1}暂停{2}."
 	}
 	"TimerPaused"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"Timer has been {1}paused{2}."
+		"chi"		"计时已{1}暂停{2}."
 	}
 	// ---------- Zones ---------- //
 	"StartZoneUndefined"
 	{
 		"#format"	"{1:s},{2:s},{3:s},{4:s},{5:s}"
 		"en"		"Your timer {1}will not{2} start because the {3}{4}{5} start zone is not set."
+		"chi"		"{1}无法{2}传送到起点, {3}{4}{5} 起点未设置."
 	}
 	"EndZoneUndefined"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"You {1}can't{2} teleport as an end zone for the map is not defined."
+		"chi"		"{1}无法传送{2}到终点, 该关卡终点未设置."
 	}
 	"DebugOffsets"
 	{
@@ -154,5 +183,6 @@
 	{
 		"#format"	"{1:s},{2:s},{3:s},{4:s},{5:s},{6:s}"
 		"en"		"Use {1}!m{2}/{3}!main{4} go to back to the main track. Or {5}!ihate!main{6}."
+		"chi"		"使用{1}!m{2}/{3}!main{4}以回到Main. 或输入{5}!ihate!main{6}."
 	}
 }

@@ -4,494 +4,599 @@
 	"AddMapZone"
 	{
 		"en"		"Add map zone"
+		"chi"		"添加地图区域"
 	}
 	"DeleteAllMapZone"
 	{
 		"en"		"Delete ALL map zones"
+		"chi"		"批量删除区域"
 	}
 	"DeleteMapZone"
 	{
 		"en"		"Delete map zone"
+		"chi"		"删除单个区域"
 	}
 	// --------- Set Start --------- //
 	"SetStart"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"Start position has been {1}set{2}."
+		"chi"		"自定义起始位置{1}已设置{2}."
 	}
 	"SetStartCommandAlive"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"You have to be {1}alive{2} to set your start position."
+		"chi"		"你必须{1}活着{2}才能设置自定义起始区域."
 	}
 	"SetStartNotInStartZone"
 	{
 		"#format"	"{1:s},{2:s},{3:s},{4:s}"
 		"en"		"You {1}must{2} be in the {3}start zone{4} to use set start."
+		"chi"		"你必须在{3}起点{4}内才能设置自定义起始区域."
 	}
 	"DeleteSetStart"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"Start position has been {1}deleted{2}."
+		"chi"		"自定义起始区域已{1}删除{2}."
 	}
 	// ---------- Commands ---------- //
 	"StageCommandAlive"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"You have to be {1}alive{2} to use this command."
+		"chi"		"你必须{1}活着{2}才能使用该指令."
 	}
 	"ModifierCommandNoArgs"
 	{
 		"en"		"Usage: sm_modifier <decimal number>"
+		"chi"		"用途: sm_modifier <数值>"
 	}
 	"ModifierTooLow"
 	{
 		"en"		"Modifier must be higher than 0."
+		"chi"		"微调数值必须大于 0."
 	}
 	"ModifierSet"
 	{
 		"en"		"Modifier set to"
+		"chi"		"微调数值已修改为"
 	}
 	"ZonesCommand"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"You {1}cannot{2} setup mapzones when you're dead."
+		"chi"		"你必须{1}活着{2}才能设置区域."
 	}
 	"ZoneCustomSpawnMenuTitle"
 	{
 		"en"		"Add custom spawn for track:"
+		"chi"		"选择要添加自定义起始位置的关卡:"
 	}
 	"ZoneCustomSpawnMenuDeleteTitle"
 	{
 		"en"		"Delete custom spawn for track:"
+		"chi"		"选择要删除自定义起始位置的关卡:"
 	}
 	"ZoneCustomSpawnExists"
 	{
 		"#format"	"{1:s},{2:s},{3:s}"
 		"en"		"Custom Spawn for track {1}{2}{3} already exists. Please delete it before placing a new one."
+		"chi"		"{1}{2}{3} 的自定义起始位置已存在. 请输入!delspawn删除该位置后重试."
 	}
 	"ZoneCustomSpawnMissing"
 	{
 		"#format"	"{1:s},{2:s},{3:s}"
 		"en"		"Custom Spawn for track {1}{2}{3} is missing."
+		"chi"		"{1}{2}{3} 的自定义起始位置不存在."
 	}
 	"ZoneCustomSpawnDelete"
 	{
 		"en"		"Deleted Custom Spawn successfully."
+		"chi"		"已删除自定义起始位置."
 	}
 	"ZoneDead"
 	{
 		"en"		"You can't place zones when you're dead."
+		"chi"		"你必须活着才能设置自定义起始位置."
 	}
 	"CurrentTier"
 	{
 		"#format"	"{1:s},{2:s},{3:s},{4:s},{5:d},{6:s}"
 		"en"		"{1}{2}{3} is tier {4}{5}{6}."
+		"chi"		"地图 {1}{2}{3} 难度为 {4}{5}{6}."
 	}
 	"SetTier"
 	{
 		"#format"	"{1:s},{2:d},{3:s}"
 		"en"		"Tier changed to {1}{2}{3}."
+		"chi"		"难度已设置为: Tier {1}{2}{3}."
 	}
 	// ---------- Panel Text ---------- //
 	"AbortZoneCreation"
 	{
 		"en"		"Abort zone creation"
+		"chi"		"中止新建区域"
 	}
 	"GridSnapPlus"
 	{
 		"#format"	"{1:d}"
 		"en"		"Grid snap + (x{1})"
+		"chi"		"方格大小 + (x{1})"
 	}
 	"GridSnapMinus"
 	{
 		"en"		"Grid snap -"
+		"chi"		"方格大小 -"
 	}
 	"WallSnap"
 	{
 		"#format"	"{1:T}"
 		"en"		"Snap to wall: {1}"
+		"chi"		"贴住墙体: {1}"
 	}
 	"CursorZone"
 	{
 		"#format"	"{1:T}"
 		"en"		"Use cursor position: {1}"
+		"chi"		"使用指针定位: {1}"
 	}
 	// ---------- Zone Menu ---------- //
 	"ZoneAdjustCancel"
 	{
 		"en"		"Cancel"
+		"chi"		"取消"
 	}
 	"ZoneAdjustDone"
 	{
 		"en"		"Done!"
+		"chi"		"完成"
 	}
 	"ZoneAdjustPosition"
 	{
 		"en"		"Adjust the zone's position.\nUse 'sm_modifier <number>' to set a new modifier."
+		"chi"		"调整区域位置.\n输入'!modifier <数值>'来修改微调数值."
 	}
 	"ZoneAxis"
 	{
 		"en"		"axis"
+		"chi"		"轴"
 	}
 	"ZoneCustomSpawnSuccess"
 	{
 		"en"		"Successfully placed custom spawn!"
+		"chi"		"已设置自定义起始位置."
 	}
 	"ZoneDecreased"
 	{
 		"en"		"decreased"
+		"chi"		"减少"
 	}
 	"ZoneEditConfirm"
 	{
 		"en"		"Confirm?"
+		"chi"		"确认设置该区域?"
 	}
 	"ZoneDeleteSuccessful"
 	{
 		"#format"	"{1:s},{2:s},{3:s}"
 		"en"		"Deleted {1}{2}{3} successfully."
+		"chi"		"已删除区域 - {1}{2}{3}."
 	}
 	"ZoneDeleteAllSuccessful"
 	{
 		"en"		"Deleted all map zones successfully"
+		"chi"		"已删除该地图的所有区域."
 	}
 	"ZoneFirst"
 	{
 		"en"		"FIRST"
+		"chi"		"第一个"
 	}
 	"ZoneIncreased"
 	{
 		"en"		"increased"
+		"chi"		"增加"
 	}
 	"ZoneMenuDeleteTitle"
 	{
 		"en"		"Delete a zone:\nPressing a zone will delete it. This action CANNOT BE REVERTED!"
+		"chi"		"删除一个区域:\n一旦选择将立即删除, 该操作不可撤销!"
 	}
 	"ZoneMenuDeleteALLTitle"
 	{
 		"en"		"Delete ALL mapzones?\nPressing 'Yes' will delete all the existing mapzones for this map.\nThis action CANNOT BE REVERTED!"
+		"chi"		"删除该地图中所有的区域?(包括Bonus的区域)\n此操作不可恢复!"
 	}
 	"ZoneMenuNo"
 	{
 		"en"		"NO!"
+		"chi"		"否"
 	}
 	"ZonesMenuNoneFound"
 	{
 		"en"		"No zones found."
+		"chi"		"未找到区域."
 	}
 	"ZoneMenuStage"
 	{
 		"en"		"Select A Stage:"
+		"chi"		"选择一个检查点:"
 	}
 	"ZoneMenuTrack"
 	{
 		"en"		"Select a track:"
+		"chi"		"选择一个赛道:"
 	}
 	"ZoneMenuTitle"
 	{
 		"#format"	"{1:s}"
 		"en"		"Select a zone type: ({1})"
+		"chi"		"[{1}] 选择区域类型:"
 	}
 	"ZoneMenuYes"
 	{
 		"en"		"YES!!! DELETE ALL THE MAPZONES!!!"
+		"chi"		"是"
 	}
 	"ZonePlaceText"
 	{
 		"#format"	"{1:s}"
 		"en"		"Press USE (default 'E') to set the {1} corner in your current position."
-	}
-	"ZonePlaceTextTF2"
-	{
-		"#format"	"{1:s}"
-		"en"		"Press ATTACK2 (default 'right click') to set the {1} corner in your current position."
+		"chi"		"点按'使用键'确认{1}定点的位置"
 	}
 	"ZonePoint"
 	{
 		"#format"	"{1:d},{2:c}"
 		"en"		"Point {1} | {2} axis"
+		"chi"		"定点 #{1} | {2} 轴"
 	}
 	"ZoneSecond"
 	{
 		"en"		"SECOND"
+		"chi"		"第二个"
 	}
 	"ZoneSetAdjust"
 	{
 		"en"		"Adjust position"
+		"chi"		"调整位置"
 	}
 	"ZoneForceRender"
 	{
 		"#format"	"{1:s}"
 		"en"		"[{1}] Force zone drawing"
+		"chi"		"[{1}] 强制绘制区域"
 	}
 	"ZoneSetAiraccelerate"
 	{
 		"#format"	"{1:d}"
 		"en"		"Airaccelerate: {1}"
+		"chi"		"空速数值: {1}"
 	}
 	"ZoneSetSpeedLimit"
 	{
 		"#format"	"{1:d}"
 		"en"		"Custom speed limit: {1}"
+		"chi"		"限速数值: {1}"
 	}
 	"ZoneSetSpeedLimitUnlimited"
 	{
 		"#format"	"{1:d}"
 		"en"		"Custom speed limit: {1} (No Limit)"
+		"chi"		"限速: {1} (无限制)"
 	}
 	"ZoneSetStage"
 	{
 		"#format"	"{1:d}"
 		"en"		"Stage: {1}"
+		"chi"		"检查点编号: {1}"
 	}
 	"ZoneSetGravity"
 	{
 		"#format"   "{1:f}"
 		"en"        "Gravity scale: {1}"
+		"chi"       "重力倍率: {1}"
 	}
 	"ZoneSetSpeedmod"
 	{
 		"#format"   "{1:f}"
 		"en"        "Speedmod: {1}"
+		"chi"       "速度倍率: {1}"
 	}
 	"ZoneEnterDataChat"
 	{
 		"en"		"Input your desired data in chat."
+		"chi"		"请在聊天框中输入数值."
 	}
 	"ZoneSetNo"
 	{
 		"en"		"No"
+		"chi"		"取消"
 	}
 	"ZoneSetTP"
 	{
 		"en"		"Yes (choose teleport destination first)"
+		"chi"		"*未设置传送目的地*"
 	}
 	"ZoneSetTPZone"
 	{
 		"en"		"Update teleport destination"
+		"chi"		"设定传送目的地"
 	}
 	"ZoneSetYes"
 	{
 		"en"		"Yes"
+		"chi"		"完成"
 	}
 	"ZoneSizeIncrease"
 	{
 		"#format"	"{1:s},{2:c},{3:s},{4:d},{5:s},{6:.01f},{7:s}"
 		"en"		"{1}{2} axis{3} (point {4}) increased by {5}{6}{7}."
+		"chi"		"{1}{2} 轴{3} (顶点 #{4}) 已增加 {5}{6}{7} 单位."
 	}
 	"ZoneSizeDecrease"
 	{
 		"#format"	"{1:s},{2:c},{3:s},{4:d},{5:s},{6:.01f},{7:s}"
 		"en"		"{1}{2} axis{3} (point {4}) decreased by {5}{6}{7}."
+		"chi"		"{1}{2} 轴{3} (顶点 #{4}) 已减少 {5}{6}{7} 单位."
 	}
 	"ZoneTeleportUpdated"
 	{
 		"en"		"Teleport destination updated."
+		"chi"		"已更新传送目的地."
 	}
 	"ZoneTeleportInsideZone"
 	{
 		"en"		"You may not place the destination inside the zone."
+		"chi"		"你不能把传送目的地设置在起点内."
 	}
 	"ZoneEditTrack"
 	{
 		"#format"	"{1:s}"
 		"en"		"Zone track: {1}"
+		"chi"		"所属赛道: {1}"
 	}
 	"ZoneEdit"
 	{
 		"en"		"Edit a map zone"
+		"chi"		"编辑区域"
 	}
 	"ZoneEditTitle"
 	{
 		"en"		"Choose a zone to edit:"
+		"chi"		"选择要编辑的区域:"
 	}
 	"ZoneInside"
 	{
 		"en"		"(Inside!)"
+		"chi"		"(所在区域)"
 	}
 	"ZoneEditRefresh"
 	{
 		"en"		"Refresh menu"
+		"chi"		"刷新菜单"
 	}
 	"TpToZone"
 	{
 		"en"        "Teleport to a zone"
+		"chi"       "传送至区域"
 	}
 	// ---------- Custom Zone ---------- //
 	"CustomZone_MainMenuTitle"
 	{
 		"en"		"Select the zone you want to customize"
+		"chi"		"选择需要自定义的区域"
 	}
 	"CustomZone_SubMenuTitle"
 	{
 		"#format"	"{1:s},{2:s}"
 		"en"		"Customizing {1} - {2}"
+		"chi"		"自定义区域设置 [{1} - {2}]"
 	}
 	"CustomZone_DisplayType"
 	{
 		"en"		"Zone display type"
+		"chi"		"显示类型"
 	}
 	"CustomZone_Color"
 	{
 		"en"		"Zone color"
+		"chi"		"区域颜色"
 	}
 	"CustomZone_Width"
 	{
 		"en"		"Zone width"
+		"chi"		"区域宽度"
 	}
 	"CustomZone_Default"
 	{
 		"en"		"Default"
+		"chi"		"默认"
 	}
 
 	"CustomZone_DisplayType_None"
 	{
 		"en"		"None"
+		"chi"		"隐藏"
 	}
 	"CustomZone_DisplayType_Box"
 	{
 		"en"		"Box"
+		"chi"		"盒状"
 	}
 	"CustomZone_DisplayType_Flat"
 	{
 		"en"		"Flat"
+		"chi"		"仅地面"
 	}
-
 	"CustomZone_Color_White"
 	{
 		"en"		"White"
+		"chi"		"白色"
 	}
 	"CustomZone_Color_Red"
 	{
 		"en"		"Red"
+		"chi"		"红色"
 	}
 	"CustomZone_Color_Orange"
 	{
 		"en"		"Orange"
+		"chi"		"橘色"
 	}
 	"CustomZone_Color_Yellow"
 	{
 		"en"		"Yellow"
+		"chi"		"黄色"
 	}
 	"CustomZone_Color_Green"
 	{
 		"en"		"Green"
+		"chi"		"绿色"
 	}
 	"CustomZone_Color_Cyan"
 	{
 		"en"		"Cyan"
+		"chi"		"青色"
 	}
 	"CustomZone_Color_Blue"
 	{
 		"en"		"Blue"
+		"chi"		"蓝色"
 	}
 	"CustomZone_Color_Purple"
 	{
 		"en"		"Purple"
+		"chi"		"紫色"
 	}
 	"CustomZone_Color_Pink"
 	{
 		"en"		"Pink"
+		"chi"		"粉色"
 	}
-
 	"CustomZone_Width_UltraThin"
 	{
 		"en"		"Ultra thin"
+		"chi"		"极细"
 	}
 	"CustomZone_Width_Thin"
 	{
 		"en"		"Thin"
+		"chi"		"细"
 	}
 	"CustomZone_Width_Normal"
 	{
 		"en"		"Normal"
+		"chi"		"普通"
 	}
 	"CustomZone_Width_Thick"
 	{
 		"en"		"Thick"
+		"chi"		"宽"
 	}
 	// ---------- Messages ---------- //
 	"ZoneSlayEnter"
 	{
 		"#format"	"{1:s},{2:s},{3:s}"
 		"en"		"{1}You have been slain for entering a {2}glitch zone{3}."
+		"chi"		"{1}你因进入{2}BUG区域{3}而被处死."
 	}
 	"ZoneStopEnter"
 	{
 		"#format"	"{1:s},{2:s},{3:s}"
 		"en"		"{1}Your timer has been stopped for entering a {2}glitch zone{3}."
+		"chi"		"{1}你的计时因进入{2}BUG区域{3}而被中止."
 	}
 	"ZoneStageEnter"
 	{
 		"#format"	"{1:s},{2:s},{3:d},{4:s},{5:s},{6:s}{7:s}"
 		"en"		"{1}You have reached stage {2}{3}{4} with a time of {5}{6}{7}."
+		"chi"		"{1}检查点 [{2}{3}{4}] | 用时: {5}{6}"
 	}
 	"Zone_Start"
 	{
 		"en"		"Start zone"
+		"chi"		"起点"
 	}
 	"Zone_End"
 	{
 		"en"		"End zone"
+		"chi"		"终点"
 	}
 	"Zone_Respawn"
 	{
 		"en"		"Glitch Zone (Respawn Player)"
+		"chi"		"防 BUG 区域 (回到起点)"
 	}
 	"Zone_Stop"
 	{
 		"en"		"Glitch Zone (Stop Timer)"
+		"chi"		"防 BUG 区域 (停止计时)"
 	}
 	"Zone_Slay"
 	{
 		"en"		"Slay Player"
+		"chi"		"防 BUG 区域 (处死玩家)"
 	}
 	"Zone_Freestyle"
 	{
 		"en"		"Freestyle Zone"
+		"chi"		"无限制/标记区域"
 	}
 	"Zone_CustomSpeedLimit"
 	{
 		"en"		"Custom Speed Limit"
+		"chi"		"自定义限速区域"
 	}
 	"Zone_Teleport"
 	{
 		"en"		"Teleport Zone"
+		"chi"		"传送区域"
 	}
 	"Zone_CustomSpawn"
 	{
 		"en"		"SPAWN POINT"
+		"chi"		"复活点区域"
 	}
 	"Zone_Easybhop"
 	{
 		"en"		"Easybhop Zone"
+		"chi"		"EzBhop 区域"
 	}
 	"Zone_Slide"
 	{
 		"en"		"Slide Zone"
+		"chi"		"滑地板区域"
 	}
 	"Zone_Airaccelerate"
 	{
 		"en"		"Custom Airaccelerate"
+		"chi"		"自定义空速区域"
 	}
 	"Zone_Stage"
 	{
 		"en"		"Stage Zone"
+		"chi"		"检查点区域"
 	}
 	"Zone_NoTimerGravity"
 	{
 		"en"		"No Timer Gravity Zone"
+		"chi"		"默认重力区域"
 	}
 	"Zone_Gravity"
 	{
 		"en"		"Gravity Zone"
+		"chi"		"自定义重力区域"
 	}
 	"Zone_Speedmod"
 	{
 		"en"		"Speedmod Zone"
+		"chi"		"速度倍率区域"
 	}
 	"Zone_Unknown"
 	{
 		"en"		"UNKNOWN ZONE"
+		"chi"		"未知区域"
 	}
 }

@@ -10,6 +10,7 @@
 	{
 		"#format"	"{1:d}"
 		"en"		"Tier {1}"
+		"chi"		"难度 {1}"
 	}
 	"HudInStartZone"
 	{
@@ -18,8 +19,8 @@
 	}
 	"HudInStartZoneCSGO"
 	{
-		"#format"	"{1:d}"
 		"en"		"In Start Zone"
+		"chi"		"\n	起点区域\n"
 	}
 	"HudEndZone"
 	{
@@ -32,44 +33,53 @@
 	}
 	"HudInEndZoneCSGO"
 	{
-		"#format"	"{1:d}"
 		"en"		"In End Zone"
+		"chi"		"\n	终点区域\n"
 	}
 	"HudPaused"
 	{
 		"en"		"[PAUSED]"
+		"chi"		"[暂停中]"
 	}
 	"HudTimeText"
 	{
 		"en"		"Time"
+		"chi"		"时间"
 	}
 	"HudBestText"
 	{
 		"en"		"Best"
+		"chi"		"个人最佳"
 	}
 	"HudJumpsText"
 	{
 		"en"		"Jumps"
+		"chi"		"跳跃数"
 	}
 	"HudStyleText"
 	{
 		"en"		"Style"
+		"chi"		"模式"
 	}
 	"HudSpeedText"
 	{
 		"en"		"Speed"
+		"chi"		"速度"
 	}
 	"HudStrafeText"
 	{
 		"en"		"Strafes"
+		"chi"		"加速数"
 	}
 	"HudTimeLeft"
 	{
 		"en"		"Time left"
+		"chi"		"剩余时间"
 	}
 	"HudSync"
 	{
 		"en"		"Sync"
+		"chi"		"同步率"
 	}
 	"HudPerfs"
 	{
@@ -78,121 +88,150 @@
 	"HudDefaultPistol"
 	{
 		"en"		"Default Pistol: 1=USP 2=Glock"
+		"chi"		"默认手枪: 1=USP 2=Glock"
 	}
 	"HudUSPSilencer"
 	{
 		"en"		"Spawn USPs with a silencer attached"
+		"chi"		"复活时USP自动装消音器"
 	}
 	"HudGlockBurst"
 	{
 		"en"		"Spawn Glocks with Burst"
+		"chi"		"复活时格洛克自动附带三连发模式"
 	}
 	"HudPracticeMode"
 	{
 		"en"		"[PRACTICE]"
+		"chi"		"[练习模式]"
 	}
 	"HudNoSpeedLimit"
 	{
 		"en"		"(No Speed Limit)"
+		"chi"		"(无限速)"
 	}
 	"HudCustomSpeedLimit"
 	{
 		"#format"	"{1:d}"
 		"en"		"(Speed Limit: {1})"
+		"chi"		"(限速: {1})"
 	}
 	"HudCenterKeys"
 	{
 		"en"        "!keys in the center"
+		"chi"       "!keys 按键显示在中心"
 	}
 	// ---------- Menus ---------- //
 	"HUDMenuTitle"
 	{
 		"en"		"HUD settings:"
+		"chi"		"HUD设置"
 	}
 	"HudMaster"
 	{
 		"en"		"Master"
+		"chi"		"全局"
 	}
 	"HudCenter"
 	{
 		"en"		"Center text"
+		"chi"		"中心HUD"
 	}
 	"HudZoneHud"
 	{
 		"en"		"Zone HUD"
+		"chi"		"区域信息"
 	}
 	"HudObserve"
 	{
 		"en"		"Spectate HUD"
+		"chi"		"观察者信息"
 	}
 	"HudSpectators"
 	{
 		"en"		"Spectator list"
+		"chi"		"观察者列表"
 	}
 	"HudKeyOverlay"
 	{
 		"en"		"Key display"
+		"chi"		"按键显示"
 	}
 	"HudHideWeapon"
 	{
 		"en"		"Hide weapons"
+		"chi"		"隐藏武器"
 	}
 	"HudTopLeft"
 	{
 		"en"		"Top left HUD (WR/PB)"
+		"chi"		"左上角HUD (WR/PB)"
 	}
 	"Hud2dVel"
 	{
 		"en"		"Use 2D Velocity"
+		"chi"		"使用XY速度"
 	}
 	"HudNoRecordSounds"
 	{
 		"en"		"No record sounds"
+		"chi"		"无记录声音"
 	}
 	"HudPracticeModeAlert"
 	{
 		"en"		"No practice mode alert"
+		"chi"		"无练习模式左下角的警告提示"
 	}
 	"HudRankText"
 	{
 		"en"		"Expected rank"
+		"chi"		"期望排名"
 	}
 	"HudTrackText"
 	{
 		"en"		"Timer track"
+		"chi"		"计时器赛道"
 	}
 	"HudSplitPbText"
 	{
 		"en"		"Split PB"
+		"chi"		"分散PB"
 	}
 	"HudMapTierText"
 	{
 		"en"		"Map tier"
+		"chi"		"地图难度"
 	}
 	"HudTimeDifference"
 	{
 		"en"		"Time Difference"
+		"chi"		"时间差"
 	}
 	"HudTopLeftRankText"
 	{
 		"en"		"Top left Rank"
+		"chi"		"左上角HUD 排名"
 	}
 	"HudVelocityDifference"
 	{
 		"en"		"Velocity Difference"
+		"chi"		"速度差"
 	}
 	"HudDebugTargetname"
 	{
 		"en"        "Debug targetname"
+		"chi"		"调试 targetname(非专业人员别碰)"
 	}
 	// ---------- Record Bots ---------- //
 	"ReplayText"
 	{
 		"en"		"Replay"
+		"chi"		"回放"
 	}
 	"NoReplayData"
 	{
 		"en"		"No replay data loaded\nPress USE or beat #1 to play"
+		"chi"		"没有回放数据\n通过按E或者通关地图进行回放"
 	}
 	"NoReplayDataTF2"
 	{
@@ -202,20 +241,24 @@
 	"SpectatorPersonal"
 	{
 		"en"		"Spectators"
+		"chi"		"大佬们"
 	}
 	"SpectatorWatching"
 	{
 		"en"		"Other Spectators"
+		"chi"		"其他的大佬"
 	}
 	// ---------- Commands ---------- //
 	"HudEnabledComponent"
 	{
 		"#format"	"{1:s},{2:s},{3:s},{4:s},{5:s}"
 		"en"		"{1}{2} {3}HUD setting {4}enabled{5}."
+		"chi"		"{1}{2} {3}HUD 设置 {4}已开启{5}."
 	}
 	"HudDisabledComponent"
 	{
 		"#format"	"{1:s},{2:s},{3:s},{4:s},{5:s}"
 		"en"		"{1}{2} {3}HUD setting {4}disabled{5}."
+		"chi"		"{1}{2} {3}HUD 设置 {4}已关闭{5}."
 	}
 }
