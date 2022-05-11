@@ -182,6 +182,19 @@ forward void Shavit_OnLeaveZone(int client, int type, int track, int id, int ent
 forward Action Shavit_OnStageMessage(int client, int stageNumber, char[] message, int maxlen);
 
 /**
+ * Gets called when a map's tier is assigned.
+ * Only called once per map, if the rankings plugin is enabled.
+ * The exception is if the admin changes the current map's tier.
+ *
+ * @param map                       Map display name.
+ * @param tier                      Map's tier.
+ * @noreturn
+ */
+forward void Shavit_OnTierAssigned(const char[] map, int tier);
+
+
+
+/**
  * Retrieve the zone ID for a given stage number.
  * Will return exception if stagenumber doesn't have a zone.
  *
@@ -313,6 +326,23 @@ native void Shavit_SetStart(int client, int track, bool anglesonly);
  */
 native void Shavit_DeleteSetStart(int client, int track);
 
+/**
+ * Gets the map tier for a specified map.
+ * Use the map's display name.
+ *
+ * @param map                       Map to get the tier of. Using "" will get the current map's tier.
+ * @return                          Map tier. 0 if no results were found.
+ */
+native int Shavit_GetMapTier(const char[] map = "");
+
+/**
+ * Gets a StringMap that contains all the cached map tiers.
+ * The returned StringMap must be deleted from memory after use!
+ *
+ * @return                          StringMap with {const char[]: map, int: tier} structure.
+ */
+native StringMap Shavit_GetMapTiers();
+
 #if 0
 native void Shavit_RemoveAllZones();
 
@@ -352,5 +382,7 @@ public void __pl_shavit_zones_SetNTVOptional()
 	MarkNativeAsOptional("Shavit_GetZoneTrack");
 	MarkNativeAsOptional("Shavit_GetZoneType");
 	MarkNativeAsOptional("Shavit_GetZoneID");
+	MarkNativeAsOptional("Shavit_GetMapTier");
+	MarkNativeAsOptional("Shavit_GetMapTiers");
 }
 #endif

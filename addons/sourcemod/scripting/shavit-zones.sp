@@ -50,6 +50,12 @@ bool gB_Connected = false;
 bool gB_MySQL = false;
 bool gB_InsertedPrebuiltZones = false;
 bool gB_PrecachedStuff = false;
+bool gB_TierQueried = false;
+
+int gI_Tier = 1; // No floating numbers for tiers, sorry.
+
+ArrayList gA_ValidMaps = null;
+StringMap gA_MapTiers = null;
 
 char gS_Map[PLATFORM_MAX_PATH];
 
@@ -138,6 +144,7 @@ Convar gCV_EnforceTracks = null;
 Convar gCV_BoxOffset = null;
 Convar gCV_ExtraSpawnHeight = null;
 Convar gCV_PrebuiltVisualOffset = null;
+Convar gCV_DefaultTier = null;
 
 Convar gCV_ForceTargetnameReset = null;
 Convar gCV_ResetTargetnameMain = null;
@@ -162,6 +169,7 @@ chatstrings_t gS_ChatStrings;
 Handle gH_Forwards_EnterZone = null;
 Handle gH_Forwards_LeaveZone = null;
 Handle gH_Forwards_StageMessage = null;
+Handle gH_Forwards_OnTierAssigned = null;
 
 // sdkcalls
 Handle gH_PhysicsRemoveTouchedList = null;
@@ -218,6 +226,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Shavit_GetZoneTrack", Native_GetZoneTrack);
 	CreateNative("Shavit_GetZoneType", Native_GetZoneType);
 	CreateNative("Shavit_GetZoneID", Native_GetZoneID);
+	CreateNative("Shavit_GetMapTier", Native_GetMapTier);
+	CreateNative("Shavit_GetMapTiers", Native_GetMapTiers);
 
 	// registers library, check "bool LibraryExists(const char[] name)" in order to use with other plugins
 	RegPluginLibrary("shavit-zones");
@@ -253,9 +263,15 @@ public void OnPluginStart()
 	RegAdminCmd("sm_editzone", Command_ZoneEdit, ADMFLAG_RCON, "Modify an existing zone. Alias of sm_zoneedit.");
 	RegAdminCmd("sm_modifyzone", Command_ZoneEdit, ADMFLAG_RCON, "Modify an existing zone. Alias of sm_zoneedit.");
 
+	RegAdminCmd("sm_settier", Command_SetTier, ADMFLAG_GENERIC, "Change the map's tier. Usage: sm_settier <tier> [map]");
+	RegAdminCmd("sm_setmaptier", Command_SetTier, ADMFLAG_GENERIC, "Change the map's tier. Usage: sm_setmaptier <tier> [map] (sm_settier alias)");
+
 	RegAdminCmd("sm_tptozone", Command_TpToZone, ADMFLAG_RCON, "Teleport to a zone");
 
 	RegAdminCmd("sm_reloadzonesettings", Command_ReloadZoneSettings, ADMFLAG_ROOT, "Reloads the zone settings.");
+
+	RegConsoleCmd("sm_tier", Command_Tier, "Prints the map's tier to chat.");
+	RegConsoleCmd("sm_maptier", Command_Tier, "Prints the map's tier to chat. (sm_tier alias)");
 
 	RegConsoleCmd("sm_stages", Command_Stages, "Opens the stage menu. Usage: sm_stages [stage #]");
 	RegConsoleCmd("sm_stage", Command_Stages, "Opens the stage menu. Usage: sm_stage [stage #]");
@@ -306,6 +322,7 @@ public void OnPluginStart()
 	gH_Forwards_EnterZone = CreateGlobalForward("Shavit_OnEnterZone", ET_Event, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	gH_Forwards_LeaveZone = CreateGlobalForward("Shavit_OnLeaveZone", ET_Event, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	gH_Forwards_StageMessage = CreateGlobalForward("Shavit_OnStageMessage", ET_Event, Param_Cell, Param_Cell, Param_String, Param_Cell);
+	gH_Forwards_OnTierAssigned = CreateGlobalForward("Shavit_OnTierAssigned", ET_Event, Param_String, Param_Cell);
 
 	// cvars and stuff
 	gCV_Interval = new Convar("shavit_zones_interval", "1.0", "Interval between each time a mapzone is being drawn to the players.", 0, true, 0.25, true, 5.0);
@@ -319,6 +336,7 @@ public void OnPluginStart()
 	gCV_BoxOffset = new Convar("shavit_zones_box_offset", "16", "Offset zone trigger boxes by this many unit\n0 - matches players bounding box\n16 - matches players center");
 	gCV_ExtraSpawnHeight = new Convar("shavit_zones_extra_spawn_height", "0.0", "YOU DONT NEED TO TOUCH THIS USUALLY. FIX YOUR ACTUAL ZONES.\nUsed to fix some shit prebuilt zones that are in the ground like bhop_strafecontrol");
 	gCV_PrebuiltVisualOffset = new Convar("shavit_zones_prebuilt_visual_offset", "0", "YOU DONT NEED TO TOUCH THIS USUALLY.\nUsed to fix the VISUAL beam offset for prebuilt zones on a map.\nExample maps you'd want to use 16 on: bhop_tranquility and bhop_amaranthglow");
+	gCV_DefaultTier = new Convar("shavit_zones_default_tier", "1", "Sets the default tier for new maps added.", 0, true, 0.0, true, 10.0);
 
 	gCV_ForceTargetnameReset = new Convar("shavit_zones_forcetargetnamereset", "0", "Reset the player's targetname upon timer start?\nRecommended to leave disabled. Enable via per-map configs when necessary.\n0 - Disabled\n1 - Enabled", 0, true, 0.0, true, 1.0);
 	gCV_ResetTargetnameMain = new Convar("shavit_zones_resettargetname_main", "", "What targetname to use when resetting the player.\nWould be applied once player teleports to the start zone or on every start if shavit_zones_forcetargetnamereset cvar is set to 1.\nYou don't need to touch this");
@@ -335,6 +353,10 @@ public void OnPluginStart()
 	Convar.AutoExecConfig();
 
 	LoadDHooks();
+
+	// tier cache
+	gA_ValidMaps = new ArrayList(ByteCountToCells(PLATFORM_MAX_PATH));
+	gA_MapTiers = new StringMap();
 
 	// misc cvars
 	sv_gravity = FindConVar("sv_gravity");
@@ -785,6 +807,26 @@ public any Native_GetZoneID(Handle plugin, int numParams)
 	return gI_EntityZone[entity];
 }
 
+public int Native_GetMapTier(Handle handler, int numParams)
+{
+	int tier = 0;
+	char sMap[PLATFORM_MAX_PATH];
+	GetNativeString(1, sMap, sizeof(sMap));
+
+	if (!sMap[0])
+	{
+		return gI_Tier;
+	}
+
+	gA_MapTiers.GetValue(sMap, tier);
+	return tier;
+}
+
+public int Native_GetMapTiers(Handle handler, int numParams)
+{
+	return view_as<int>(CloneHandle(gA_MapTiers, handler));
+}
+
 bool JumpToZoneType(KeyValues kv, int type, int track)
 {
 	static const char config_keys[ZONETYPES_SIZE][2][50] = {
@@ -990,6 +1032,7 @@ public void OnMapStart()
 
 	UnloadZones(0);
 	RefreshZones();
+	QueryTiers();
 
 	// start drawing mapzones here
 	if(gH_DrawAllZones == null)
@@ -1009,6 +1052,7 @@ public void OnMapStart()
 
 public void OnMapEnd()
 {
+	gB_TierQueried = false;
 	gB_PrecachedStuff = false;
 	gB_InsertedPrebuiltZones = false;
 	delete gH_DrawVisible;
@@ -1048,6 +1092,77 @@ public void OnEntityDestroyed(int entity)
 			RequestFrame(CreateZoneEntities, true);
 			gB_ZoneCreationQueued = true;
 		}
+	}
+}
+
+void QueryTiers()
+{
+	// do NOT keep running this more than once per map, as UpdateAllPoints() is called after this eventually and locks up the database while it is running
+	if (gB_TierQueried)
+	{
+		return;
+	}
+
+	// Default tier.
+	// I won't repeat the same mistake blacky has done with tier 3 being default..
+	gI_Tier = gCV_DefaultTier.IntValue;
+
+	char sQuery[512];
+	FormatEx(sQuery, sizeof(sQuery), "SELECT map, tier FROM %smaptiers ORDER BY map ASC;", gS_MySQLPrefix);
+	gH_SQL.Query2(SQL_FillTierCache_Callback, sQuery, 0, DBPrio_High);
+
+	gB_TierQueried = true;
+}
+
+public void SQL_FillTierCache_Callback(Database db, DBResultSet results, const char[] error, any data)
+{
+	if(results == null)
+	{
+		LogError("Timer (rankings, fill tier cache) error! Reason: %s", error);
+
+		return;
+	}
+
+	gA_ValidMaps.Clear();
+	gA_MapTiers.Clear();
+
+	while(results.FetchRow())
+	{
+		char sMap[PLATFORM_MAX_PATH];
+		results.FetchString(0, sMap, sizeof(sMap));
+		LowercaseString(sMap);
+
+		int tier = results.FetchInt(1);
+
+		gA_MapTiers.SetValue(sMap, tier);
+		gA_ValidMaps.PushString(sMap);
+
+		Call_StartForward(gH_Forwards_OnTierAssigned);
+		Call_PushString(sMap);
+		Call_PushCell(tier);
+		Call_Finish();
+	}
+
+	if (!gA_MapTiers.GetValue(gS_Map, gI_Tier))
+	{
+		Call_StartForward(gH_Forwards_OnTierAssigned);
+		Call_PushString(gS_Map);
+		Call_PushCell(gI_Tier);
+		Call_Finish();
+
+		char sQuery[512];
+		FormatEx(sQuery, sizeof(sQuery), "REPLACE INTO %smaptiers (map, tier) VALUES ('%s', %d);", gS_MySQLPrefix, gS_Map, gI_Tier);
+		gH_SQL.Query2(SQL_SetMapTier_Callback, sQuery, 0, DBPrio_High);
+	}
+}
+
+public void SQL_SetMapTier_Callback(Database db, DBResultSet results, const char[] error, any data)
+{
+	if(results == null)
+	{
+		LogError("Timer (rankings, set map tier) error! Reason: %s", error);
+
+		return;
 	}
 }
 
@@ -2074,11 +2189,93 @@ public Action Command_ZoneEdit(int client, int args)
 	return OpenEditMenu(client);
 }
 
+public Action Command_SetTier(int client, int args)
+{
+	char sArg[8];
+	GetCmdArg(1, sArg, 8);
+
+	int tier = StringToInt(sArg);
+
+	if(args == 0 || tier < 1 || tier > 10)
+	{
+		ReplyToCommand(client, "%T", "ArgumentsMissing", client, "sm_settier <tier> (1-10) [map]");
+
+		return Plugin_Handled;
+	}
+
+	char map[PLATFORM_MAX_PATH];
+
+	if (args < 2)
+	{
+		gI_Tier = tier;
+		map = gS_Map;
+	}
+	else
+	{
+		GetCmdArg(2, map, sizeof(map));
+		TrimString(map);
+		LowercaseString(map);
+
+		if (!map[0])
+		{
+			Shavit_PrintToChat(client, "Invalid map name");
+			return Plugin_Handled;
+		}
+	}
+
+	gA_MapTiers.SetValue(map, tier);
+
+	Call_StartForward(gH_Forwards_OnTierAssigned);
+	Call_PushString(map);
+	Call_PushCell(tier);
+	Call_Finish();
+
+	Shavit_PrintToChat(client, "%T", "SetTier", client, gS_ChatStrings.sVariable2, tier, gS_ChatStrings.sText);
+
+	char sQuery[512];
+	FormatEx(sQuery, sizeof(sQuery), "REPLACE INTO %smaptiers (map, tier) VALUES ('%s', %d);", gS_MySQLPrefix, map, tier);
+
+	DataPack data = new DataPack();
+	data.WriteCell(client ? GetClientSerial(client) : 0);
+	data.WriteString(map);
+
+	gH_SQL.Query2(SQL_SetMapTier_Callback, sQuery, data);
+
+	return Plugin_Handled;
+}
+
 public Action Command_ReloadZoneSettings(int client, int args)
 {
 	LoadZoneSettings();
 
 	ReplyToCommand(client, "Reloaded zone settings.");
+
+	return Plugin_Handled;
+}
+
+public Action Command_Tier(int client, int args)
+{
+	int tier = gI_Tier;
+
+	char sMap[PLATFORM_MAX_PATH];
+
+	if(args == 0)
+	{
+		sMap = gS_Map;
+	}
+	else
+	{
+		GetCmdArgString(sMap, sizeof(sMap));
+		LowercaseString(sMap);
+
+		if(!GuessBestMapName(gA_ValidMaps, sMap, sMap) || !gA_MapTiers.GetValue(sMap, tier))
+		{
+			Shavit_PrintToChat(client, "%t", "Map was not found", sMap);
+			return Plugin_Handled;
+		}
+	}
+
+	Shavit_PrintToChat(client, "%T", "CurrentTier", client, gS_ChatStrings.sVariable, sMap, gS_ChatStrings.sText, gS_ChatStrings.sVariable2, tier, gS_ChatStrings.sText);
 
 	return Plugin_Handled;
 }

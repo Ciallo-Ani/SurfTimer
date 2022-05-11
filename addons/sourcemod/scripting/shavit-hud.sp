@@ -69,7 +69,6 @@ Handle gH_Forwards_PreOnDrawKeysHUD = null;
 bool gB_ReplayPlayback = false;
 bool gB_Zones = false;
 bool gB_Sounds = false;
-bool gB_Rankings = false;
 bool gB_DynamicChannels = false;
 
 // cache
@@ -170,7 +169,6 @@ public void OnPluginStart()
 	gB_ReplayPlayback = LibraryExists("shavit-replay-playback");
 	gB_Zones = LibraryExists("shavit-zones");
 	gB_Sounds = LibraryExists("shavit-sounds");
-	gB_Rankings = LibraryExists("shavit-rankings");
 	gB_DynamicChannels = LibraryExists("DynamicChannels");
 
 	// HUD handle
@@ -302,10 +300,6 @@ public void OnLibraryAdded(const char[] name)
 	{
 		gB_Sounds = true;
 	}
-	else if(StrEqual(name, "shavit-rankings"))
-	{
-		gB_Rankings = true;
-	}
 	else if(StrEqual(name, "DynamicChannels"))
 	{
 		gB_DynamicChannels = true;
@@ -325,10 +319,6 @@ public void OnLibraryRemoved(const char[] name)
 	else if(StrEqual(name, "shavit-sounds"))
 	{
 		gB_Sounds = false;
-	}
-	else if(StrEqual(name, "shavit-rankings"))
-	{
-		gB_Rankings = false;
 	}
 	else if(StrEqual(name, "DynamicChannels"))
 	{
@@ -796,7 +786,7 @@ Action ShowHUDMenu(int client, int item)
 	FormatEx(sHudItem, 64, "%T", "HudTopLeftRankText", client);
 	menu.AddItem(sInfo, sHudItem);
 
-	if(gB_Rankings)
+	if(gB_Zones)
 	{
 		FormatEx(sInfo, 16, "@%d", HUD2_MAPTIER);
 		FormatEx(sHudItem, 64, "%T", "HudMapTierText", client);
@@ -1304,7 +1294,7 @@ int AddHUDToBuffer_Source2013(int client, huddata_t data, char[] buffer, int max
 
 	if((gI_HUDSettings[client] & HUD_ZONEHUD) > 0 && data.iZoneHUD != ZoneHUD_None)
 	{
-		if(gB_Rankings && (gI_HUD2Settings[client] & HUD2_MAPTIER) == 0)
+		if(gB_Zones && (gI_HUD2Settings[client] & HUD2_MAPTIER) == 0)
 		{
 			FormatEx(sLine, 128, "%T", "HudZoneTier", client, data.iMapTier);
 			AddHUDLine(buffer, maxlen, sLine, iLines);
@@ -1513,7 +1503,7 @@ int AddHUDToBuffer_CSGO(int client, huddata_t data, char[] buffer, int maxlen)
 
 	if (data.iTrack == Track_Main)
 	{
-		if (gB_Rankings && (gI_HUD2Settings[client] & HUD2_MAPTIER) == 0)
+		if (gB_Zones && (gI_HUD2Settings[client] & HUD2_MAPTIER) == 0)
 		{
 			FormatEx(sFirstThing, sizeof(sFirstThing), "%T", "HudZoneTier", client, data.iMapTier);
 		}
@@ -1743,7 +1733,7 @@ void UpdateMainHUD(int client)
 	huddata.iHUDSettings = gI_HUDSettings[client];
 	huddata.iHUD2Settings = gI_HUD2Settings[client];
 	huddata.iPreviousSpeed = gI_PreviousSpeed[client];
-	huddata.iMapTier = gB_Rankings ? Shavit_GetMapTier() : 0;
+	huddata.iMapTier = gB_Zones ? Shavit_GetMapTier() : 0;
 
 	huddata.fClosestReplayTime = -1.0;
 	huddata.fClosestVelocityDifference = 0.0;

@@ -2,6 +2,8 @@
 *.smx
 *.dll
 *.so
+shavit-mapchooser.sp
+shavit-rankings.sp
 
 # editors
 *.atom-build.json

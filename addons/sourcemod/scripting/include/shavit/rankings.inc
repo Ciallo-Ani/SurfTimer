@@ -23,16 +23,7 @@
 #endif
 #define _shavit_rankings_included
 
-/**
- * Gets called when a map's tier is assigned.
- * Only called once per map, if the rankings plugin is enabled.
- * The exception is if the admin changes the current map's tier.
- *
- * @param map                       Map display name.
- * @param tier                      Map's tier.
- * @noreturn
- */
-forward void Shavit_OnTierAssigned(const char[] map, int tier);
+
 
 /**
  * Gets called when the server acknowledges the client's ranking status.
@@ -45,23 +36,6 @@ forward void Shavit_OnTierAssigned(const char[] map, int tier);
  * @noreturn
  */
 forward void Shavit_OnRankAssigned(int client, int rank, float points, bool first);
-
-/**
- * Gets the map tier for a specified map.
- * Use the map's display name.
- *
- * @param map                       Map to get the tier of. Using "" will get the current map's tier.
- * @return                          Map tier. 0 if no results were found.
- */
-native int Shavit_GetMapTier(const char[] map = "");
-
-/**
- * Gets a StringMap that contains all the cached map tiers.
- * The returned StringMap must be deleted from memory after use!
- *
- * @return                          StringMap with {const char[]: map, int: tier} structure.
- */
-native StringMap Shavit_GetMapTiers();
 
 /**
  * Gets player points.
@@ -160,8 +134,6 @@ public SharedPlugin __pl_shavit_rankings =
 #if !defined REQUIRE_PLUGIN
 public void __pl_shavit_rankings_SetNTVOptional()
 {
-	MarkNativeAsOptional("Shavit_GetMapTier");
-	MarkNativeAsOptional("Shavit_GetMapTiers");
 	MarkNativeAsOptional("Shavit_GetPoints");
 	MarkNativeAsOptional("Shavit_GetRank");
 	MarkNativeAsOptional("Shavit_GetRankedPlayers");

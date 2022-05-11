@@ -1,6 +1,16 @@
-"Sprite"
+"UnlitGeneric"
 {
-	"$spriteorientation" "vp_parallel"
-	"$spriteorigin" "[ 0.50 0.50 ]"
 	"$basetexture" "shavit/zone_beam"
+	"$translucent" 1
+	"$vertexcolor" 1
+	
+	"Proxies"
+	{
+		"TextureScroll"
+		{
+			"texturescrollvar" "$baseTextureTransform"
+			"texturescrollrate" 0.1
+			"texturescrollangle" 270
+		}
+	}
 }
