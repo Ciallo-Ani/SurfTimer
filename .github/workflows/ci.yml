@@ -47,12 +47,12 @@ jobs:
           rm -rf ./dhooks-2.2.0-detours17-sm110.zip
 
           wget https://github.com/rtldg/sm_closestpos/releases/download/v1.1.1/sm_closestpos-sm1.10-ubuntu-18.04-b0a9b88.zip
-          unzip -o sm_closestpos-sm1.10-ubuntu-18.04.zip
-          rm -rf ./sm_closestpos-sm1.10-ubuntu-18.04.zip
+          unzip -o sm_closestpos-sm1.10-ubuntu-18.04-b0a9b88.zip
+          rm -rf ./sm_closestpos-sm1.10-ubuntu-18.04-b0a9b88.zip
 
           wget https://github.com/rtldg/sm_closestpos/releases/download/v1.1.1/sm_closestpos-sm1.10-windows-latest-b0a9b88.zip
-          unzip -o sm_closestpos-sm1.10-windows.zip
-          rm -rf ./sm_closestpos-sm1.10-windows.zip
+          unzip -o sm_closestpos-sm1.10-windows-b0a9b88.zip
+          rm -rf ./sm_closestpos-sm1.10-windows-b0a9b88.zip
 
           git clone https://github.com/GAMMACASE/MomSurfFix.git
           cp -r MomSurfFix/addons ./
