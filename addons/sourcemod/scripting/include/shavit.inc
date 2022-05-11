@@ -29,8 +29,6 @@
 #include <shavit/chat>
 #include <shavit/checkpoints>
 #include <shavit/hud>
-#include <shavit/mapchooser>
-#include <shavit/rankings>
 #include <shavit/replay-playback>
 #include <shavit/replay-recorder>
 #include <shavit/wr>
