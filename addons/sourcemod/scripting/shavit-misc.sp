@@ -59,6 +59,32 @@ char gS_RadioCommands[][] = { "coverme", "takepoint", "holdpos", "regroup", "fol
 	"getinpos", "stormfront", "report", "roger", "enemyspot", "needbackup", "sectorclear", "inposition", "reportingin",
 	"getout", "negative", "enemydown", "compliment", "thanks", "cheer", "go_a", "go_b", "sorry", "needrop", "playerradio", "playerchatwheel", "player_ping", "chatwheel_ping" };
 
+char gS_ForcedCvars[][][] = 
+{
+	{ "mp_autokick", "0" },
+	{ "mp_drop_knife_enable", "1" },
+	{ "mp_startmoney", "0" },
+	{ "mp_teamcashawards", "0" },
+	{ "mp_playercashawards", "0" },
+	{ "sv_accelerate", "5" },
+	{ "sv_friction", "4"},
+	{ "sv_timebetweenducks", "0" },
+	{ "sv_staminamax", "0" },
+	{ "sv_staminajumpcost", "0" },
+	{ "sv_staminalandcost", "0" },
+	{ "sv_autobunnyhopping", "1" },
+	{ "sv_enablebunnyhopping", "1"},
+	{ "sv_clamp_unsafe_velocities", "0" },
+	{ "sv_ladder_scale_speed", "1" },
+	{ "sv_pure", "0" },
+	{ "sv_alltalk", "1" },
+	{ "sv_allchat", "1" },
+	{ "sv_talk_enemy_living", "1" },
+	{ "sv_talk_enemy_dead", "1" },
+	{ "sv_full_alltalk", "1" },
+	{ "sv_deadtalk", "1" }
+};
+
 bool gB_Hide[MAXPLAYERS+1];
 bool gB_Late = false;
 int gI_GroundEntity[MAXPLAYERS+1];
@@ -490,6 +516,8 @@ void CreateSpawnPoint(int iTeam, float fOrigin[3], float fAngles[3])
 
 public void OnMapStart()
 {
+	CreateTimer(1.0, Timer_DelayChangeConVar);
+
 	gH_IsSpawnPointValid.HookGamerules(Hook_Post, Hook_IsSpawnPointValid);
 
 	GetLowercaseMapName(gS_Map);
@@ -595,6 +623,21 @@ public void OnConfigsExecuted()
 	{
 		CreateTimer(gCV_AdvertisementInterval.FloatValue, Timer_Advertisement, 0, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	}
+}
+
+public Action Timer_DelayChangeConVar(Handle timer)
+{
+	for(int i = 0; i < sizeof(gS_ForcedCvars); i++)
+	{
+		ConVar hCvar = FindConVar(gS_ForcedCvars[i][0]);
+
+		if(hCvar != null)
+		{
+			hCvar.SetString(gS_ForcedCvars[i][1]);
+		}
+	}
+
+	return Plugin_Stop;
 }
 
 bool LoadAdvertisementsConfig()
@@ -1198,6 +1241,15 @@ void DumbSetVelocity(int client, float fSpeed[3])
 
 public Action Shavit_OnUserCmdPre(int client, int &buttons, int &impulse, float vel[3], float angles[3], TimerStatus status, int track, int style)
 {
+	// stolen from cs_shareddefs.cpp
+	static const float CS_PLAYER_DUCK_SPEED_IDEAL = 8.0;
+
+	// fix csgo broken duck
+	if (buttons & IN_DUCK)
+	{
+		SetEntPropFloat(client, Prop_Send, "m_flDuckSpeed", CS_PLAYER_DUCK_SPEED_IDEAL);
+	}
+
 	bool bNoclip = (GetEntityMoveType(client) == MOVETYPE_NOCLIP);
 	bool bInStart = gB_Zones && Shavit_InsideZone(client, Zone_Start, track);
 
