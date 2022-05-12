@@ -63,6 +63,7 @@ char gS_ForcedCvars[][][] =
 {
 	{ "mp_autokick", "0" },
 	{ "mp_drop_knife_enable", "1" },
+	{ "mp_maxrounds", "0" },
 	{ "mp_startmoney", "0" },
 	{ "mp_teamcashawards", "0" },
 	{ "mp_playercashawards", "0" },
@@ -120,7 +121,6 @@ Convar gCV_CreateSpawnPoints = null;
 Convar gCV_DisableRadio = null;
 Convar gCV_Scoreboard = null;
 Convar gCV_WeaponCommands = null;
-Convar gCV_PlayerOpacity = null;
 Convar gCV_StaticPrestrafe = null;
 Convar gCV_NoclipMe = null;
 Convar gCV_AdvertisementInterval = null;
@@ -264,6 +264,7 @@ public void OnPluginStart()
 	LoadTranslations("common.phrases");
 	LoadTranslations("shavit-common.phrases");
 	LoadTranslations("shavit-misc.phrases");
+	LoadTranslations("shavit-core.phrases");
 
 	// advertisements
 	gA_Advertisements = new ArrayList(300);
@@ -291,7 +292,6 @@ public void OnPluginStart()
 	gCV_DisableRadio = new Convar("shavit_misc_disableradio", "1", "Block radio commands.\n0 - Disabled (radio commands work)\n1 - Enabled (radio commands are blocked)", 0, true, 0.0, true, 1.0);
 	gCV_Scoreboard = new Convar("shavit_misc_scoreboard", "1", "Manipulate scoreboard so score is -{time} and deaths are {rank})?\nDeaths part requires shavit-rankings.\n0 - Disabled\n1 - Enabled", 0, true, 0.0, true, 1.0);
 	gCV_WeaponCommands = new Convar("shavit_misc_weaponcommands", "2", "Enable sm_usp, sm_glock, sm_knife, and infinite ammo?\n0 - Disabled\n1 - Enabled\n2 - Also give infinite reserve ammo for USP & Glocks.\n3 - Also give infinite clip ammo for USP & Glocks.\n4 - Also give infinite reserve for all weapons (and grenades).\n5 - Also give infinite clip ammo for all weapons (and grenades).", 0, true, 0.0, true, 5.0);
-	gCV_PlayerOpacity = new Convar("shavit_misc_playeropacity", "69", "Player opacity (alpha) to set on spawn.\n-1 - Disabled\nValue can go up to 255. 0 for invisibility.", 0, true, -1.0, true, 255.0);
 	gCV_StaticPrestrafe = new Convar("shavit_misc_staticprestrafe", "1", "Force prestrafe for every pistol.\n250 is the default value and some styles will have 260.\n0 - Disabled\n1 - Enabled", 0, true, 0.0, true, 1.0);
 	gCV_NoclipMe = new Convar("shavit_misc_noclipme", "1", "Allow +noclip, sm_p and all the noclip commands?\n0 - Disabled\n1 - Enabled\n2 - requires 'admin_noclipme' override or ADMFLAG_CHEATS flag.", 0, true, 0.0, true, 2.0);
 	gCV_AdvertisementInterval = new Convar("shavit_misc_advertisementinterval", "600.0", "Interval between each chat advertisement.\nConfiguration file for those is configs/shavit-advertisements.cfg.\nSet to 0.0 to disable.\nRequires server restart for changes to take effect.", 0, true, 0.0);
@@ -2012,28 +2012,7 @@ public Action Command_Noclip(int client, int args)
 		return Plugin_Handled;
 	}
 
-	if(GetEntityMoveType(client) != MOVETYPE_NOCLIP)
-	{
-		if (gCV_PauseMovement.BoolValue && Shavit_IsPaused(client))
-		{
-			SetEntityMoveType(client, MOVETYPE_NOCLIP);
-			return Plugin_Handled;
-		}
-
-		if(!ShouldDisplayStopWarning(client))
-		{
-			Shavit_StopTimer(client);
-			SetEntityMoveType(client, MOVETYPE_NOCLIP);
-		}
-		else
-		{
-			OpenStopWarningMenu(client, DoNoclip);
-		}
-	}
-	else
-	{
-		SetEntityMoveType(client, MOVETYPE_WALK);
-	}
+	UpdateByNoclipStatus(client, GetEntityMoveType(client) == MOVETYPE_WALK);
 
 	return Plugin_Handled;
 }
@@ -2051,22 +2030,10 @@ public Action CommandListener_Noclip(int client, const char[] command, int args)
 	}
 
 	gI_LastNoclipTick[client] = GetGameTickCount();
-
-	if((gCV_NoclipMe.IntValue == 1 || (gCV_NoclipMe.IntValue == 2 && CheckCommandAccess(client, "noclipme", ADMFLAG_CHEATS))) && command[0] == '+')
+	
+	if(gCV_NoclipMe.IntValue == 1 || (gCV_NoclipMe.IntValue == 2 && CheckCommandAccess(client, "noclipme", ADMFLAG_CHEATS)))
 	{
-		if(!ShouldDisplayStopWarning(client))
-		{
-			Shavit_StopTimer(client);
-			SetEntityMoveType(client, MOVETYPE_NOCLIP);
-		}
-		else
-		{
-			OpenStopWarningMenu(client, DoNoclip);
-		}
-	}
-	else if(GetEntityMoveType(client) == MOVETYPE_NOCLIP)
-	{
-		SetEntityMoveType(client, MOVETYPE_WALK);
+		UpdateByNoclipStatus(client, command[0] == '+');
 	}
 
 	return Plugin_Stop;
@@ -2102,6 +2069,97 @@ public Action CommandListener_Real_Noclip(int client, const char[] command, int 
 	}
 
 	return Plugin_Continue;
+}
+
+void UpdateByNoclipStatus(int client, bool walkingStatus)
+{
+	bool segments = Shavit_GetStyleSettingBool(Shavit_GetBhopStyle(client), "segments");
+
+	if(walkingStatus)
+	{
+		if(gCV_PauseMovement.BoolValue
+			 && !segments
+			 && !Shavit_IsPracticeMode(client)
+			 && ((Shavit_GetTimerStatus(client) == Timer_Running
+			 && Shavit_GetClientTime(client) != 0.0)
+			 || Shavit_IsPaused(client)))
+		{
+			if(Shavit_IsPaused(client))
+			{
+				SetEntityMoveType(client, MOVETYPE_NOCLIP);
+			}
+			else if(Shavit_CanPause(client) == 0)
+			{
+				Shavit_PauseTimer(client);
+				Shavit_PrintToChat(client, "%T", "MessagePause", client, gS_ChatStrings.sText, gS_ChatStrings.sVariable, gS_ChatStrings.sText);
+				SetEntityMoveType(client, MOVETYPE_NOCLIP);
+			}
+			else
+			{
+				Shavit_PrintToChat(client, "%T", "FailedToNoclip", client, gS_ChatStrings.sWarning, gS_ChatStrings.sText);
+			}
+		}
+		else
+		{
+			if(!ShouldDisplayStopWarning(client) || segments)
+			{
+				Shavit_StopTimer(client);
+				SetEntityMoveType(client, MOVETYPE_NOCLIP);
+			}
+			else
+			{
+				OpenStopWarningMenu(client, DoNoclip);
+			}
+		}
+	}
+	else
+	{
+		if(Shavit_GetTimerStatus(client) == Timer_Paused && gCV_PauseMovement.BoolValue)
+		{
+			OpenUnPauseMenu(client);
+		}
+
+		SetEntityMoveType(client, MOVETYPE_WALK);
+	}
+}
+
+void OpenUnPauseMenu(int client)
+{
+	Menu menu = new Menu(UnPauseMenu_Handler);
+
+	menu.SetTitle("是否恢复计时?\n ");
+
+	menu.AddItem("yes", "是");
+	menu.AddItem("no", "否");
+
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+public int UnPauseMenu_Handler(Menu menu, MenuAction action, int param1, int param2)
+{
+	if(action == MenuAction_Select)
+	{
+		char sInfo[8];
+		menu.GetItem(param2, sInfo, sizeof(sInfo));
+
+		if(StrEqual(sInfo, "yes"))
+		{
+			if(Shavit_IsPaused(param1))
+			{
+				Shavit_ResumeTimer(param1, true);
+			}
+		}
+		else //if(StrEqual(sInfo, "no"))
+		{
+			Shavit_PrintToChat(param1, "%T", "NoclipResumeTimer", param1, gS_ChatStrings.sVariable, gS_ChatStrings.sText);
+		}
+	}
+	else if(action == MenuAction_End)
+	{
+		delete menu;
+	}
+
+	return 0;
 }
 
 public Action Command_Specs(int client, int args)
@@ -2346,12 +2404,6 @@ public void Player_Spawn(Event event, const char[] name, bool dontBroadcast)
 	if(gCV_NoBlock.BoolValue)
 	{
 		SetEntProp(client, Prop_Data, "m_CollisionGroup", 2);
-	}
-
-	if(gCV_PlayerOpacity.IntValue != -1)
-	{
-		SetEntityRenderMode(client, RENDER_TRANSCOLOR);
-		SetEntityRenderColor(client, 255, 255, 255, gCV_PlayerOpacity.IntValue);
 	}
 }
 

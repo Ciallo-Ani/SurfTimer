@@ -114,6 +114,15 @@ Convar gCV_DefaultHUD2 = null;
 stylestrings_t gS_StyleStrings[STYLE_LIMIT];
 chatstrings_t gS_ChatStrings;
 
+// 管理员隐身
+bool gB_LastShouldHide[MAXPLAYERS+1];
+bool gB_ChangeToSpec[MAXPLAYERS+1];
+
+// 饼饼的傻逼rtv
+bool gB_ShouldDraw[MAXPLAYERS+1];
+
+
+
 public Plugin myinfo =
 {
 	name = "[shavit] HUD",
@@ -154,6 +163,8 @@ public void OnPluginStart()
 
 	gI_HintText = GetUserMessageId("HintText");
 	gI_TextMsg = GetUserMessageId("TextMsg");
+
+	HookEvent("player_team", Player_Team_Post, EventHookMode_PostNoCopy);
 
 	if(gEV_Type == Engine_TF2)
 	{
@@ -201,6 +212,7 @@ public void OnPluginStart()
 		..."HUD_NOPRACALERT			4096\n"
 		..."HUD_USP                  8192\n"
 		..."HUD_GLOCK                16384\n"
+		..."HUD_HIDEADMIN           32768\n"
 	);
 
 	IntToString(HUD_DEFAULT2, defaultHUD, 8);
@@ -369,6 +381,33 @@ public Action Shavit_OnUserCmdPre(int client, int &buttons, int &impulse, float 
 	return Plugin_Continue;
 }
 
+public void OnPlayerRunCmdPost(int client)
+{
+	if(IsValidClient(client) && GetUserAdmin(client) != INVALID_ADMIN_ID)
+	{
+		bool bNowShouldHide = view_as<bool>(gI_HUDSettings[client] & HUD_HIDEADMIN);
+
+		if(!gB_LastShouldHide[client] && bNowShouldHide) // 不隐藏 -> 隐藏
+		{
+			if(GetClientTeam(client) == CS_TEAM_SPECTATOR)
+			{
+				Shavit_PrintToChat(client, "您已隐身");
+				ChangeClientTeam(client, CS_TEAM_NONE);
+			}
+		}
+		else if(gB_LastShouldHide[client] && !bNowShouldHide) // 隐藏 -> 不隐藏
+		{
+			if(gB_ChangeToSpec[client])
+			{
+				Shavit_PrintToChat(client, "您已取消了隐身");
+				ChangeClientTeam(client, CS_TEAM_SPECTATOR);
+			}
+		}
+
+		gB_LastShouldHide[client] = bNowShouldHide;
+	}
+}
+
 public void Shavit_OnChatConfigLoaded()
 {
 	Shavit_GetChatStringsStruct(gS_ChatStrings);
@@ -487,6 +526,43 @@ public void Player_ChangeClass(Event event, const char[] name, bool dontBroadcas
 public void Teamplay_Round_Start(Event event, const char[] name, bool dontBroadcast)
 {
 	CreateTimer(0.5, Timer_FillerHintTextAll, 0, TIMER_FLAG_NO_MAPCHANGE);
+}
+
+public void Player_Team_Post(Event e, const char[] name, bool b)
+{
+	int client = GetClientOfUserId(e.GetInt("userid"));
+
+	if(GetUserAdmin(client) != INVALID_ADMIN_ID)
+	{
+		int team = e.GetInt("team");
+
+		switch(team)
+		{
+			case CS_TEAM_CT, CS_TEAM_T:
+			{
+				gB_ChangeToSpec[client] = false;
+			}
+
+			case CS_TEAM_SPECTATOR:
+			{
+				gB_ChangeToSpec[client] = true;
+
+				if((gI_HUDSettings[client] & HUD_HIDEADMIN))
+				{
+					RequestFrame(Frame_ChangeClientTeam, GetClientSerial(client));
+				}
+			}
+		}
+	}
+}
+
+public void Frame_ChangeClientTeam(any data)
+{
+	int client = GetClientFromSerial(data);
+
+	Shavit_PrintToChat(client, "您已隐身");
+
+	ChangeClientTeam(client, CS_TEAM_NONE);
 }
 
 public Action Hook_HintText(UserMsg msg_id, BfRead msg, const int[] players, int playersNum, bool reliable, bool init)
@@ -727,6 +803,13 @@ Action ShowHUDMenu(int client, int item)
 	{
 		FormatEx(sInfo, 16, "!%d", HUD_DEBUGTARGETNAME);
 		FormatEx(sHudItem, 64, "%T", "HudDebugTargetname", client);
+		menu.AddItem(sInfo, sHudItem);
+	}
+
+	if(GetUserAdmin(client) != INVALID_ADMIN_ID)
+	{
+		FormatEx(sInfo, 16, "!%d", HUD_HIDEADMIN);
+		FormatEx(sHudItem, 64, "观察者隐身(管理员专属)");
 		menu.AddItem(sInfo, sHudItem);
 	}
 
@@ -2072,7 +2155,6 @@ void UpdateSpectatorList(int client, Panel panel, bool &draw)
 
 	int iSpectatorClients[MAXPLAYERS+1];
 	int iSpectators = 0;
-	bool bIsAdmin = CheckCommandAccess(client, "admin_speclisthide", ADMFLAG_KICK);
 
 	for(int i = 1; i <= MaxClients; i++)
 	{
@@ -2081,7 +2163,7 @@ void UpdateSpectatorList(int client, Panel panel, bool &draw)
 			continue;
 		}
 
-		if((gCV_SpectatorList.IntValue == 1 && !bIsAdmin && CheckCommandAccess(i, "admin_speclisthide", ADMFLAG_KICK)) ||
+		if((gCV_SpectatorList.IntValue == 1 && (GetUserAdmin(i) != INVALID_ADMIN_ID) && (gI_HUDSettings[i] & HUD_HIDEADMIN)) ||
 			(gCV_SpectatorList.IntValue == 2 && !CanUserTarget(client, i)))
 		{
 			continue;
@@ -2474,4 +2556,36 @@ void PrintCSGOHUDText(int client, const char[] str)
 	pb.AddString("params", NULL_STRING);
 
 	EndMessage();
+}
+
+// ======[ 饼饼RTV FORWARDS ]======
+
+forward void RTV_OnLaunch();
+forward void RTV_OnLaunchFinished();
+
+public void RTV_OnLaunch()
+{
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if(!IsValidClient(i))
+		{
+			continue;
+		}
+
+		gB_ShouldDraw[i] = view_as<bool>(gI_HUDSettings[i] & HUD_MASTER);
+		gI_HUDSettings[i] &= ~HUD_MASTER;
+	}
+}
+
+public void RTV_OnLaunchFinished()
+{
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if(!IsValidClient(i) || !gB_ShouldDraw[i])
+		{
+			continue;
+		}
+
+		gI_HUDSettings[i] |= HUD_MASTER;
+	}
 }
