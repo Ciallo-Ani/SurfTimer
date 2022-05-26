@@ -152,6 +152,10 @@
 		"en"		"Spectator list"
 		"chi"		"观察者列表"
 	}
+	"HudSpectatorsDead"
+	{
+		"en"		"Spectator list (only when dead)"
+	}
 	"HudKeyOverlay"
 	{
 		"en"		"Key display"

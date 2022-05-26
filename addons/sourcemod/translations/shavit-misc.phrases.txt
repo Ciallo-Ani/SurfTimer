@@ -276,6 +276,10 @@
 		"en"        "Edge jump"
 		"chi"       "边缘自动起跳"
 	}
+	"AutogainBasicStrafer"
+	{
+		"en"        "Autogain basic strafer"
+	}
 	"AutoPrestrafe"
 	{
 		"en"        "Auto Prestrafe"
@@ -293,7 +297,7 @@
 	}
 	"Autostrafer_autogain"
 	{
-		"en"        "Velocity (oblivious)"
+		"en"        "Velocity/autogain (oblivious)"
 		"chi"       "AutoGain (无明显抖动)"
 	}
 	"Autostrafer_autogain_nsl"

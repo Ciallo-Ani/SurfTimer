@@ -1,8 +1,9 @@
 /*
  * shavit's Timer - HUD
- * by: shavit
+ * by: shavit, strafe, KiD Fearless, rtldg, Technoblazed, Nairda, Nuko, GAMMA CASE
  *
- * This file is part of shavit's Timer.
+ * This file is part of shavit's Timer (https://github.com/shavitush/bhoptimer)
+ *
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License, version 3.0, as published by the
@@ -16,7 +17,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *
-*/
+ */
 
 #include <sourcemod>
 #include <sdktools>
@@ -126,7 +127,7 @@ bool gB_ShouldDraw[MAXPLAYERS+1];
 public Plugin myinfo =
 {
 	name = "[shavit] HUD",
-	author = "shavit",
+	author = "shavit, strafe, KiD Fearless, rtldg, Technoblazed, Nairda, Nuko, GAMMA CASE",
 	description = "HUD for shavit's bhop timer.",
 	version = SHAVIT_VERSION,
 	url = "https://github.com/shavitush/bhoptimer"
@@ -213,6 +214,7 @@ public void OnPluginStart()
 		..."HUD_USP                  8192\n"
 		..."HUD_GLOCK                16384\n"
 		..."HUD_HIDEADMIN           32768\n"
+		..."HUD_SPECTATORSDEAD       65536\n"
 	);
 
 	IntToString(HUD_DEFAULT2, defaultHUD, 8);
@@ -233,6 +235,7 @@ public void OnPluginStart()
 		..."HUD2_VELOCITYDIFFERENCE	8192\n"
 		..."HUD2_USPSILENCER         16384\n"
 		..."HUD2_GLOCKBURST          32768\n"
+		..."HUD2_CENTERKEYS          65536\n"
 	);
 
 	Convar.AutoExecConfig();
@@ -754,6 +757,10 @@ Action ShowHUDMenu(int client, int item)
 	FormatEx(sHudItem, 64, "%T", "HudSpectators", client);
 	menu.AddItem(sInfo, sHudItem);
 
+	FormatEx(sInfo, 16, "!%d", HUD_SPECTATORSDEAD);
+	FormatEx(sHudItem, 64, "%T", "HudSpectatorsDead", client);
+	menu.AddItem(sInfo, sHudItem);
+
 	FormatEx(sInfo, 16, "!%d", HUD_KEYOVERLAY);
 	FormatEx(sHudItem, 64, "%T", "HudKeyOverlay", client);
 	menu.AddItem(sInfo, sHudItem);
@@ -1227,6 +1234,11 @@ void TriggerHUDUpdate(int client, bool keysonly = false) // keysonly because CS:
 	      && (GetClientMenu(client, null) == MenuSource_None || GetClientMenu(client, null) == MenuSource_RawPanel)
 	)
 	{
+		if (gI_HUDSettings[client] & HUD_SPECTATORSDEAD && IsPlayerAlive(client))
+		{
+			return;
+		}
+
 		bool bShouldDraw = false;
 		Panel pHUD = new Panel();
 
@@ -2146,6 +2158,12 @@ void UpdateSpectatorList(int client, Panel panel, bool &draw)
 		return;
 	}
 
+
+	if (gI_HUDSettings[client] & HUD_SPECTATORSDEAD && IsPlayerAlive(client))
+	{
+		return;
+	}
+
 	int target = GetSpectatorTarget(client, client);
 
 	if(((gI_HUDSettings[client] & HUD_OBSERVE) == 0 && client != target))
@@ -2375,7 +2393,7 @@ void UpdateKeyHint(int client)
 				}
 			}
 
-			if((gI_HUDSettings[client] & HUD_SPECTATORS) > 0)
+			if ((gI_HUDSettings[client] & HUD_SPECTATORS) > 0 && (!(gI_HUDSettings[client] & HUD_SPECTATORSDEAD) || !IsPlayerAlive(client)))
 			{
 				int iSpectatorClients[MAXPLAYERS+1];
 				int iSpectators = 0;

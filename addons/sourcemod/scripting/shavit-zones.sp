@@ -1,8 +1,9 @@
 /*
  * shavit's Timer - Map Zones
- * by: shavit
+ * by: shavit, GAMMA CASE, rtldg, KiD Fearless, Kryptanyte, carnifex, rumour, BoomShotKapow, Nuko, Technoblazed, Kxnrl, Extan, sh4hrazad, OliviaMourning
  *
- * This file is part of shavit's Timer.
+ * This file is part of shavit's Timer (https://github.com/shavitush/bhoptimer)
+ *
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License, version 3.0, as published by the
@@ -16,7 +17,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *
-*/
+ */
 
 #include <sourcemod>
 #include <clientprefs>
@@ -173,6 +174,7 @@ Handle gH_Forwards_OnTierAssigned = null;
 
 // sdkcalls
 Handle gH_PhysicsRemoveTouchedList = null;
+Handle gH_CommitSuicide = null; // sourcemod always finds a way to amaze me
 
 // dhooks
 DynamicHook gH_TeleportDhook = null;
@@ -202,7 +204,7 @@ int gI_LastMenuPos[MAXPLAYERS+1];
 public Plugin myinfo =
 {
 	name = "[shavit] Map Zones",
-	author = "shavit",
+	author = "shavit, GAMMA CASE, rtldg, KiD Fearless, Kryptanyte, carnifex, rumour, BoomShotKapow, Nuko, Technoblazed, Kxnrl, Extan, sh4hrazad, OliviaMourning",
 	description = "Map zones for shavit's bhop timer.",
 	version = SHAVIT_VERSION,
 	url = "https://github.com/shavitush/bhoptimer"
@@ -272,6 +274,7 @@ public void OnPluginStart()
 
 	RegConsoleCmd("sm_tier", Command_Tier, "Prints the map's tier to chat.");
 	RegConsoleCmd("sm_maptier", Command_Tier, "Prints the map's tier to chat. (sm_tier alias)");
+	RegConsoleCmd("sm_beamer", Command_Beamer, "Draw cool beams");
 
 	RegConsoleCmd("sm_stages", Command_Stages, "Opens the stage menu. Usage: sm_stages [stage #]");
 	RegConsoleCmd("sm_stage", Command_Stages, "Opens the stage menu. Usage: sm_stage [stage #]");
@@ -468,6 +471,15 @@ void LoadDHooks()
 	if (GetEngineVersion() == Engine_CSGO)
 	{
 		gH_TeleportDhook.AddParam(HookParamType_Bool);
+	}
+
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "CommitSuicide");
+	PrepSDKCall_AddParameter(SDKType_Bool, SDKPass_ByValue); // explode
+	PrepSDKCall_AddParameter(SDKType_Bool, SDKPass_ByValue); // force
+	if (!(gH_CommitSuicide = EndPrepSDKCall()))
+	{
+		SetFailState("Failed to create sdkcall to \"CommitSuicide\"");
 	}
 
 	delete hGameData;
@@ -1427,10 +1439,10 @@ public void Shavit_OnChatConfigLoaded()
 
 void ClearZone(int index)
 {
-	gV_MapZones[index][0] = NULL_VECTOR;
-	gV_MapZones[index][1] = NULL_VECTOR;
-	gV_Destinations[index] = NULL_VECTOR;
-	gV_ZoneCenter[index] = NULL_VECTOR;
+	gV_MapZones[index][0] = ZERO_VECTOR;
+	gV_MapZones[index][1] = ZERO_VECTOR;
+	gV_Destinations[index] = ZERO_VECTOR;
+	gV_ZoneCenter[index] = ZERO_VECTOR;
 
 	gA_ZoneCache[index].bZoneInitialized = false;
 	gA_ZoneCache[index].bPrebuilt = false;
@@ -1690,8 +1702,8 @@ public void OnClientConnected(int client)
 
 	for (int i = 0; i < TRACKS_SIZE; i++)
 	{
-		gF_ClimbButtonCache[client][i][0] = NULL_VECTOR;
-		gF_ClimbButtonCache[client][i][1] = NULL_VECTOR;
+		gF_ClimbButtonCache[client][i][0] = ZERO_VECTOR;
+		gF_ClimbButtonCache[client][i][1] = ZERO_VECTOR;
 	}
 
 	bool empty_HasSetStart[TRACKS_SIZE];
@@ -1841,7 +1853,7 @@ void SetStart(int client, int track, bool anglesonly)
 
 	if (anglesonly)
 	{
-		gF_StartPos[client][track] = NULL_VECTOR;
+		gF_StartPos[client][track] = ZERO_VECTOR;
 	}
 	else
 	{
@@ -1888,8 +1900,8 @@ public Action Command_DeleteSetStart(int client, int args)
 void DeleteSetStart(int client, int track)
 {
 	gB_HasSetStart[client][track] = false;
-	gF_StartPos[client][track] = view_as<float>({0.0, 0.0, 0.0});
-	gF_StartAng[client][track] = view_as<float>({0.0, 0.0, 0.0});
+	gF_StartPos[client][track] = ZERO_VECTOR;
+	gF_StartAng[client][track] = ZERO_VECTOR;
 
 	char query[512];
 
@@ -1964,7 +1976,6 @@ public Action Command_DrawAllZones(int client, int args)
 	return Plugin_Handled;
 }
 
-// Krypt Custom Spawn Functions (https://github.com/Kryptanyte)
 public Action Command_AddSpawn(int client, int args)
 {
 	if(!IsValidClient(client))
@@ -2128,14 +2139,13 @@ void ClearCustomSpawn(int track)
 {
 	if(track != -1)
 	{
-		gF_CustomSpawn[track] = NULL_VECTOR;
-
+		gF_CustomSpawn[track] = ZERO_VECTOR;
 		return;
 	}
 
 	for(int i = 0; i < TRACKS_SIZE; i++)
 	{
-		gF_CustomSpawn[i] = NULL_VECTOR;
+		gF_CustomSpawn[i] = ZERO_VECTOR;
 	}
 }
 
@@ -2276,6 +2286,107 @@ public Action Command_Tier(int client, int args)
 	}
 
 	Shavit_PrintToChat(client, "%T", "CurrentTier", client, gS_ChatStrings.sVariable, sMap, gS_ChatStrings.sText, gS_ChatStrings.sVariable2, tier, gS_ChatStrings.sText);
+
+	return Plugin_Handled;
+}
+
+stock void RotateAroundAxis(float v[3], const float in_k[3], float theta)
+{
+	// https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula#Statement
+	// vrot = (v * cos(theta)) + ((k x v) * sin(theta)) + (k * (k . v) * (1 - cos(theta)))
+
+	float k[3];
+	k[0] = DegToRad(in_k[1]); k[1] = DegToRad(in_k[2]); k[2] = DegToRad(in_k[0]); // right-hand rule related ordering?
+	NormalizeVector(k, k);
+
+	theta = DegToRad(theta);
+	float theta_cos = Cosine(theta);
+	float theta_sin = Sine(theta);
+	float one_minus_theta_cos = 1.0 - theta_cos;
+	float kv_dot = GetVectorDotProduct(k, v);
+
+	float kv_cross[3];
+	GetVectorCrossProduct(k, v, kv_cross);
+
+	for (int i = 0; i < 3; i++)
+	{
+		v[i] = (v[i] * theta_cos)
+		     + (kv_cross[i] * theta_sin)
+		     + (k[i] * kv_dot * one_minus_theta_cos);
+	}
+}
+
+public Action Command_Beamer(int client, int args)
+{
+	static float rate_limit[MAXPLAYERS+1];
+	float now = GetEngineTime();
+
+	if (rate_limit[client] > now)
+		return Plugin_Handled;
+
+	rate_limit[client] = now + 0.2;
+
+	float startpos[3], endpos[3], direction[3];
+	GetClientEyePosition(client, startpos);
+	startpos[2] -= 3.0;
+	GetClientEyeAngles(client, direction);
+
+	float delay = 0.0;
+
+	for (int i = 20; i >= 0; --i)
+	{
+		/*
+		My code from tracegun.lua that I based this off of:
+			local ang = tr.Normal:Angle() // ( traceRes.HitPos - traceRes.StartPos ):Normalize()
+			ang:RotateAroundAxis(tr.HitNormal, 180)
+			local dir = ang:Forward()*-1
+
+			tr = util.TraceLine({start=tr.HitPos, endpos=tr.HitPos+(dir*100000), filter=players})
+		*/
+
+		TR_TraceRayFilter(startpos, direction, MASK_ALL, RayType_Infinite, TRFilter_NoPlayers, client);
+		TR_GetEndPosition(endpos);
+
+		TE_SetupBeamPoints(
+			startpos,
+			endpos,
+			gI_BeamSpriteIgnoreZ,
+			gA_ZoneSettings[Zone_Start][Track_Main].iHalo,
+			0,    // StartFrame
+			0,    // FrameRate
+			10.0, // Life
+			1.0,  // Width
+			1.0,  // EndWidth
+			0,    // FadeLength
+			0.0,  // Amplitude
+			{255, 255, 0, 192}, // Colour
+			20    // Speed
+		);
+
+		TE_SendToClient(client, delay);
+		delay += 0.11;
+
+		if (!i) break;
+
+		SubtractVectors(endpos, startpos, direction);
+		NormalizeVector(direction, direction);
+		GetVectorAngles(direction, direction);
+
+#if 1
+		// this sometimes helps with the beam getting stuck in walls
+		float fwd[3];
+		GetAngleVectors(direction, fwd, ZERO_VECTOR, ZERO_VECTOR);
+		ScaleVector(fwd, -1.5);
+		AddVectors(fwd, startpos, startpos);
+#endif
+
+		startpos = endpos;
+
+		float hitnormal[3];
+		TR_GetPlaneNormal(INVALID_HANDLE, hitnormal);
+
+		RotateAroundAxis(direction, hitnormal, 180.0);
+	}
 
 	return Plugin_Handled;
 }
@@ -3152,10 +3263,10 @@ void Reset(int client)
 	gB_WaitingForChatInput[client] = false;
 	gI_ZoneID[client] = -1;
 
-	gV_Point1[client] = NULL_VECTOR;
-	gV_Point2[client] = NULL_VECTOR;
-	gV_Teleport[client] = NULL_VECTOR;
-	gV_WallSnap[client] = NULL_VECTOR;
+	gV_Point1[client] = ZERO_VECTOR;
+	gV_Point2[client] = ZERO_VECTOR;
+	gV_Teleport[client] = ZERO_VECTOR;
+	gV_WallSnap[client] = ZERO_VECTOR;
 }
 
 void ShowPanel(int client, int step)
@@ -3509,7 +3620,8 @@ public Action Shavit_OnUserCmdPre(int client, int &buttons, int &impulse, float 
 
 public bool TRFilter_NoPlayers(int entity, int mask, any data)
 {
-	return (entity != view_as<int>(data) || (entity < 1 || entity > MaxClients));
+	//return (entity != view_as<int>(data) || (entity < 1 || entity > MaxClients));
+	return !(1 <= entity <= MaxClients);
 }
 
 public int CreateZoneConfirm_Handler(Menu menu, MenuAction action, int param1, int param2)
@@ -4097,7 +4209,7 @@ public Action Timer_Draw(Handle Timer, any data)
 
 		if(gI_ZoneType[client] == Zone_Teleport && !EmptyVector(gV_Teleport[client]))
 		{
-			TE_SetupEnergySplash(gV_Teleport[client], NULL_VECTOR, false);
+			TE_SetupEnergySplash(gV_Teleport[client], ZERO_VECTOR, false);
 			TE_SendToAll(0.0);
 		}
 	}
@@ -4617,6 +4729,11 @@ void PhysicsRemoveTouchedList(int client)
 	SDKCall(gH_PhysicsRemoveTouchedList, client);
 }
 
+void ACTUALLY_ForcePlayerSuicide(int client)
+{
+	SDKCall(gH_CommitSuicide, client, false, true);
+}
+
 public void StartTouchPost(int entity, int other)
 {
 	if(other < 1 || other > MaxClients || gI_EntityZone[entity] == -1 || !gA_ZoneCache[gI_EntityZone[entity]].bZoneInitialized || IsFakeClient(other) ||
@@ -4641,9 +4758,12 @@ public void StartTouchPost(int entity, int other)
 
 		case Zone_Slay:
 		{
-			Shavit_StopTimer(other);
-			ForcePlayerSuicide(other);
-			Shavit_PrintToChat(other, "%T", "ZoneSlayEnter", other, gS_ChatStrings.sWarning, gS_ChatStrings.sVariable2, gS_ChatStrings.sWarning);
+			if (status != Timer_Stopped)
+			{
+				Shavit_StopTimer(other);
+				ACTUALLY_ForcePlayerSuicide(other);
+				Shavit_PrintToChat(other, "%T", "ZoneSlayEnter", other, gS_ChatStrings.sWarning, gS_ChatStrings.sVariable2, gS_ChatStrings.sWarning);
+			}
 		}
 
 		case Zone_Stop:
@@ -4833,9 +4953,14 @@ public void TouchPost(int entity, int other)
 
 		case Zone_Slay:
 		{
-			Shavit_StopTimer(other);
-			ForcePlayerSuicide(other);
-			Shavit_PrintToChat(other, "%T", "ZoneSlayEnter", other, gS_ChatStrings.sWarning, gS_ChatStrings.sVariable2, gS_ChatStrings.sWarning);
+			TimerStatus status = Shavit_GetTimerStatus(other);
+
+			if (status != Timer_Stopped)
+			{
+				Shavit_StopTimer(other);
+				ACTUALLY_ForcePlayerSuicide(other);
+				Shavit_PrintToChat(other, "%T", "ZoneSlayEnter", other, gS_ChatStrings.sWarning, gS_ChatStrings.sVariable2, gS_ChatStrings.sWarning);
+			}
 		}
 
 		case Zone_Stop:

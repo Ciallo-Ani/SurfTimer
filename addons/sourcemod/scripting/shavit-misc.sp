@@ -1,8 +1,9 @@
 /*
  * shavit's Timer - Miscellaneous
- * by: shavit
+ * by: shavit, Technoblazed, strafe, EvanIMK, Nickelony, rtldg, ofirgall
  *
- * This file is part of shavit's Timer.
+ * This file is part of shavit's Timer (https://github.com/shavitush/bhoptimer)
+ *
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License, version 3.0, as published by the
@@ -16,7 +17,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *
-*/
+ */
 
 #include <sourcemod>
 #include <sdktools>
@@ -171,7 +172,7 @@ chatstrings_t gS_ChatStrings;
 public Plugin myinfo =
 {
 	name = "[shavit] Miscellaneous",
-	author = "shavit",
+	author = "shavit, Technoblazed, strafe, EvanIMK, Nickelony, rtldg, ofirgall",
 	description = "Miscellaneous features for shavit's bhop timer.",
 	version = SHAVIT_VERSION,
 	url = "https://github.com/shavitush/bhoptimer"
@@ -1234,7 +1235,7 @@ public void Shavit_OnStop(int client, int track)
 void DumbSetVelocity(int client, float fSpeed[3])
 {
 	// Someone please let me know if any of these are unnecessary.
-	SetEntPropVector(client, Prop_Data, "m_vecBaseVelocity", NULL_VECTOR);
+	SetEntPropVector(client, Prop_Data, "m_vecBaseVelocity", ZERO_VECTOR);
 	SetEntPropVector(client, Prop_Data, "m_vecVelocity", fSpeed);
 	SetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", fSpeed); // m_vecBaseVelocity+m_vecVelocity
 }
@@ -1425,14 +1426,14 @@ void ClearViewPunch(int victim)
 	{
 		if(gEV_Type == Engine_CSGO)
 		{
-			SetEntPropVector(victim, Prop_Send, "m_viewPunchAngle", NULL_VECTOR);
-			SetEntPropVector(victim, Prop_Send, "m_aimPunchAngle", NULL_VECTOR);
-			SetEntPropVector(victim, Prop_Send, "m_aimPunchAngleVel", NULL_VECTOR);
+			SetEntPropVector(victim, Prop_Send, "m_viewPunchAngle", ZERO_VECTOR);
+			SetEntPropVector(victim, Prop_Send, "m_aimPunchAngle", ZERO_VECTOR);
+			SetEntPropVector(victim, Prop_Send, "m_aimPunchAngleVel", ZERO_VECTOR);
 		}
 		else
 		{
-			SetEntPropVector(victim, Prop_Send, "m_vecPunchAngle", NULL_VECTOR);
-			SetEntPropVector(victim, Prop_Send, "m_vecPunchAngleVel", NULL_VECTOR);
+			SetEntPropVector(victim, Prop_Send, "m_vecPunchAngle", ZERO_VECTOR);
+			SetEntPropVector(victim, Prop_Send, "m_vecPunchAngleVel", ZERO_VECTOR);
 		}
 	}
 }
