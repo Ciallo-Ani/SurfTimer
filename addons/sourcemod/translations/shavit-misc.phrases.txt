@@ -367,4 +367,16 @@
 		"en"		"Advertisements disabled"
 		"chi"		"定时消息已启用."
 	}
+	"FailedToNoclip"
+	{
+		"#format"	"{1:s},{2:s}"
+		"en"		"You {1}can't{2} noclip when moving, crouching or in the air."
+		"chi"		"移动时, 蹲下时或空中{1}无法{2}启用穿墙."
+	}
+	"NoclipResumeTimer"
+	{
+		"#format"	"{1:s},{2:s}"
+		"en"		"Resume timer using {1}!pause{2}."
+		"chi"		"输入 {1}!pause{2} 以恢复计时."
+	}
 }
