@@ -1841,8 +1841,8 @@ void UpdateMainHUD(int client)
 
 	huddata.iTarget = target;
 	huddata.iSpeed = RoundToNearest(fSpeedHUD);
-	huddata.iZoneHUD = iZoneHUD;
 	huddata.fTime = (bReplay)? fReplayTime:Shavit_GetClientTime(target);
+	huddata.iZoneHUD = (huddata.fTime <= 0.5) ? iZoneHUD : ZoneHUD_None;
 	huddata.iJumps = (bReplay)? 0:Shavit_GetClientJumps(target);
 	huddata.iStrafes = (bReplay)? 0:Shavit_GetStrafeCount(target);
 	huddata.iRank = (bReplay)? 0:Shavit_GetRankForTime(huddata.iStyle, huddata.fTime, huddata.iTrack);
