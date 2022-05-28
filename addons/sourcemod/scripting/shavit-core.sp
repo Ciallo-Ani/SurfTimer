@@ -2450,9 +2450,10 @@ void StartTimer(int client, int track)
 			gA_Timers[client].fMaxVelocity = curVel;
 
 			// TODO: Look into when this should be reset (since resetting it here disables timescale while in startzone).
-			//gA_Timers[client].fNextFrameTime = 0.0;
+			// Fow now, eg bhop_4way.
+			gA_Timers[client].fNextFrameTime = 0.0;
 
-			//gA_Timers[client].fplayer_speedmod = 1.0;
+			gA_Timers[client].fplayer_speedmod = 1.0;
 			UpdateLaggedMovement(client, true);
 
 			SetEntityGravity(client, GetStyleSettingFloat(gA_Timers[client].bsStyle, "gravity"));
