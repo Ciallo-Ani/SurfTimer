@@ -42,8 +42,6 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-native void Shavit_RefreshMaplist();
-
 #define DEBUG 0
 
 EngineVersion gEV_Type = Engine_Unknown;
@@ -1178,8 +1176,6 @@ public void SQL_SetMapTier_Callback(Database db, DBResultSet results, const char
 
 		return;
 	}
-
-	Shavit_RefreshMaplist();
 }
 
 bool GetButtonInfo(int entity, int& zone, int& track)

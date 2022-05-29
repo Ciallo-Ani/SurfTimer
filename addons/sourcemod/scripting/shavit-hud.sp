@@ -386,7 +386,7 @@ public Action Shavit_OnUserCmdPre(int client, int &buttons, int &impulse, float 
 
 public void OnPlayerRunCmdPost(int client)
 {
-	if(IsValidClient(client) && GetUserAdmin(client) != INVALID_ADMIN_ID)
+	if(IsValidClient(client) && IsPlayerAdmin(client))
 	{
 		bool bNowShouldHide = view_as<bool>(gI_HUDSettings[client] & HUD_HIDEADMIN);
 
@@ -535,7 +535,7 @@ public void Player_Team_Post(Event e, const char[] name, bool b)
 {
 	int client = GetClientOfUserId(e.GetInt("userid"));
 
-	if(GetUserAdmin(client) != INVALID_ADMIN_ID)
+	if(IsPlayerAdmin(client))
 	{
 		int team = e.GetInt("team");
 
@@ -813,7 +813,7 @@ Action ShowHUDMenu(int client, int item)
 		menu.AddItem(sInfo, sHudItem);
 	}
 
-	if(GetUserAdmin(client) != INVALID_ADMIN_ID)
+	if(IsPlayerAdmin(client))
 	{
 		FormatEx(sInfo, 16, "!%d", HUD_HIDEADMIN);
 		FormatEx(sHudItem, 64, "观察者隐身(管理员专属)");
@@ -1230,8 +1230,8 @@ void TriggerHUDUpdate(int client, bool keysonly = false) // keysonly because CS:
 		}
 	}
 	else if (((gI_HUDSettings[client] & HUD_SPECTATORS) > 0 || (draw_keys && !center_keys))
-	      && (!gB_Zones || !Shavit_IsClientCreatingZone(client))
-	      && (GetClientMenu(client, null) == MenuSource_None || GetClientMenu(client, null) == MenuSource_RawPanel)
+		  && (!gB_Zones || !Shavit_IsClientCreatingZone(client))
+		  && (GetClientMenu(client, null) == MenuSource_None || GetClientMenu(client, null) == MenuSource_RawPanel)
 	)
 	{
 		if (gI_HUDSettings[client] & HUD_SPECTATORSDEAD && IsPlayerAlive(client))
@@ -2181,7 +2181,7 @@ void UpdateSpectatorList(int client, Panel panel, bool &draw)
 			continue;
 		}
 
-		if((gCV_SpectatorList.IntValue == 1 && (GetUserAdmin(i) != INVALID_ADMIN_ID) && (gI_HUDSettings[i] & HUD_HIDEADMIN)) ||
+		if((gCV_SpectatorList.IntValue == 1 && (IsPlayerAdmin(i)) && (gI_HUDSettings[i] & HUD_HIDEADMIN)) ||
 			(gCV_SpectatorList.IntValue == 2 && !CanUserTarget(client, i)))
 		{
 			continue;
@@ -2606,4 +2606,9 @@ public void RTV_OnLaunchFinished()
 
 		gI_HUDSettings[i] |= HUD_MASTER;
 	}
+}
+
+stock bool IsPlayerAdmin(int client)
+{
+	return CheckCommandAccess(client, "sm_ban", ADMFLAG_BAN, false);
 }

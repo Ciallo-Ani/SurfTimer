@@ -188,6 +188,8 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_time", Command_PersonalBest, "View a player's time on a specific map.");
 	RegConsoleCmd("sm_pb", Command_PersonalBest, "View a player's time on a specific map.");
 
+	RegConsoleCmd("sm_top", Command_Maptops, "显示主线/奖励记录");
+
 	// delete records
 	RegAdminCmd("sm_delete", Command_Delete, ADMFLAG_RCON, "Opens a record deletion menu interface.");
 	RegAdminCmd("sm_deleterecord", Command_Delete, ADMFLAG_RCON, "Opens a record deletion menu interface.");
@@ -2531,6 +2533,81 @@ public int SubMenu_Handler(Menu menu, MenuAction action, int param1, int param2)
 
 	return 0;
 }
+
+public Action Command_Maptops(int client, int args)
+{
+	char sCommand[16];
+	GetCmdArg(0, sCommand, 16);
+
+	bool havemap = (args >= 1);
+
+	// if the track doesn't fit in the bonus track range then assume it's a map name
+	if (args > 1)
+	{
+		havemap = true;
+	}
+
+	if(!havemap)
+	{
+		strcopy(gA_WRCache[client].sClientMap, 128, gS_Map);
+	}
+
+	else
+	{
+		GetCmdArg(1, gA_WRCache[client].sClientMap, 128);
+		if (!GuessBestMapName(gA_ValidMaps, gA_WRCache[client].sClientMap, gA_WRCache[client].sClientMap))
+		{
+			Shavit_PrintToChat(client, "%t", "Map was not found", gA_WRCache[client].sClientMap);
+			return Plugin_Continue;
+		}
+	}
+
+	OpenMaptopMenu(client);
+
+	return Plugin_Continue;
+}
+
+/*
+	Maptop
+*/
+
+void OpenMaptopMenu(int client)
+{
+	Menu menu = new Menu(MaptopMenu_Handler);
+	menu.SetTitle("记录查询菜单 \n ");
+
+	menu.AddItem("Main", "主线记录");
+	menu.AddItem("Bonus", "奖励关记录");
+
+	menu.Display(client, -1);
+}
+
+public int MaptopMenu_Handler(Menu menu, MenuAction action, int param1, int param2)
+{
+	if(action == MenuAction_Select)
+	{
+		char sInfo[8];
+		menu.GetItem(param2, sInfo, 8);
+
+		if(StrEqual(sInfo, "Main"))
+		{
+			FakeClientCommand(param1, "sm_wr %s", gA_WRCache[param1].sClientMap);
+		}
+
+		else if(StrEqual(sInfo, "Bonus"))
+		{
+			FakeClientCommand(param1, "sm_bwr %s", gA_WRCache[param1].sClientMap);
+		}
+	}
+
+	else if(action == MenuAction_End)
+	{
+		delete menu;
+	}
+
+	return 0;
+}
+
 
 public void Shavit_OnDatabaseLoaded()
 {

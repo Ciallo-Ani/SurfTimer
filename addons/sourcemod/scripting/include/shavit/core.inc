@@ -457,7 +457,7 @@ stock int GetSpectatorTarget(int client, int fallback = -1)
 {
 	int target = fallback;
 
-	if(IsClientObserver(client))
+	if(IsValidClient(client) && IsClientObserver(client))
 	{
 		int iObserverMode = GetEntProp(client, Prop_Send, "m_iObserverMode");
 

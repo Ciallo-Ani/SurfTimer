@@ -74,8 +74,6 @@ char gS_ForcedCvars[][][] =
 	{ "sv_staminamax", "0" },
 	{ "sv_staminajumpcost", "0" },
 	{ "sv_staminalandcost", "0" },
-	{ "sv_autobunnyhopping", "1" },
-	{ "sv_enablebunnyhopping", "1"},
 	{ "sv_clamp_unsafe_velocities", "0" },
 	{ "sv_ladder_scale_speed", "1" },
 	{ "sv_pure", "0" },
@@ -224,6 +222,12 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_glock", Command_Weapon, "Spawn a Glock.");
 	RegConsoleCmd("sm_knife", Command_Weapon, "Spawn a knife.");
 
+	// helper
+	RegConsoleCmd("sm_timer", Command_ShavitTimerHelper, "打开助手菜单");
+	RegConsoleCmd("sm_bhoptimer", Command_ShavitTimerHelper, "打开助手菜单");
+	RegConsoleCmd("sm_help", Command_Help, "打开本菜单");
+	RegConsoleCmd("sm_myhelp", Command_Help, "打开本菜单");
+
 	// noclip
 	RegConsoleCmd("sm_prac", Command_Noclip, "Toggles noclip. (sm_nc alias)");
 	RegConsoleCmd("sm_practice", Command_Noclip, "Toggles noclip. (sm_nc alias)");
@@ -302,7 +306,7 @@ public void OnPluginStart()
 	gCV_DropAll = new Convar("shavit_misc_dropall", "1", "Allow all weapons to be dropped?\n0 - Disabled\n1 - Enabled", 0, true, 0.0, true, 1.0);
 	gCV_JointeamHook = new Convar("shavit_misc_jointeamhook", "1", "Hook `jointeam`?\n0 - Disabled\n1 - Enabled, players can instantly change teams.", 0, true, 0.0, true, 1.0);
 	gCV_SpectatorList = new Convar("shavit_misc_speclist", "1", "Who to show in !specs?\n0 - everyone\n1 - all admins (admin_speclisthide override to bypass)\n2 - players you can target", 0, true, 0.0, true, 2.0);
-	gCV_HideChatCommands = new Convar("shavit_misc_hidechatcmds", "1", "Hide commands from chat?\n0 - Disabled\n1 - Enabled", 0, true, 0.0, true, 1.0);
+	gCV_HideChatCommands = new Convar("shavit_misc_hidechatcmds", "0", "Hide commands from chat?\n0 - Disabled\n1 - Enabled", 0, true, 0.0, true, 1.0);
 	gCV_StopTimerWarning = new Convar("shavit_misc_stoptimerwarning", "180", "Time in seconds to display a warning before stopping the timer with noclip or !stop.\n0 - Disabled");
 	gCV_WRMessages = new Convar("shavit_misc_wrmessages", "3", "How many \"NEW <style> WR!!!\" messages to print?\n0 - Disabled", 0,  true, 0.0, true, 100.0);
 	gCV_BhopSounds = new Convar("shavit_misc_bhopsounds", "1", "Should bhop (landing and jumping) sounds be muted?\n1 - Blocked while !hide is enabled\n2 - Always blocked", 0,  true, 1.0, true, 2.0);
@@ -550,6 +554,29 @@ public void OnMapStart()
 			}
 		}
 	}
+}
+
+public void OnEntityCreated(int entity, const char[] classname)
+{
+	if(StrEqual(classname, "trigger_multiple") || StrEqual(classname, "trigger_once") || StrEqual(classname, "trigger_push") || StrEqual(classname, "trigger_teleport") || StrEqual(classname, "trigger_gravity"))
+	{
+		SDKHook(entity, SDKHook_StartTouch, HookTrigger);
+		SDKHook(entity, SDKHook_EndTouch, HookTrigger);
+		SDKHook(entity, SDKHook_Touch, HookTrigger);
+	}
+}
+
+public Action HookTrigger(int entity, int other)
+{
+	if(IsValidClient(other))
+	{
+		if(Shavit_IsPaused(other) || ((Shavit_GetClientTime(other) <= 0.1) && !Shavit_IsPracticeMode(other)))
+		{
+			return Plugin_Handled;
+		}
+	}
+
+	return Plugin_Continue;
 }
 
 public void OnAutoConfigsBuffered()
@@ -1898,6 +1925,108 @@ public Action Command_Weapon(int client, int args)
 	}
 
 	return Plugin_Handled;
+}
+
+public Action Command_Help(int client, int args)
+{
+	OpenCommandsMenu(client);
+
+	return Plugin_Continue;
+}
+
+void OpenCommandsMenu(int client)
+{
+	Menu menu = new Menu(CommandsMenu_Handler);
+	menu.SetTitle("指令菜单\n  ");
+
+	CommandIterator it = new CommandIterator();
+	while(it.Next())
+	{
+		char sCommand[32];
+		it.GetName(sCommand, sizeof(sCommand));
+		if(!CheckCommandAccess(client, sCommand, it.Flags) || 
+			StrEqual(sCommand, "ff") || 
+			StrEqual(sCommand, "motd") || 
+			StrEqual(sCommand, "nextmap"))
+		{
+			continue;
+		}
+
+		char sDescription[128];
+		it.GetDescription(sDescription, sizeof(sDescription));
+
+		char sItem[160];
+		FormatEx(sItem, sizeof(sItem), "%s - %s", sCommand, sDescription);
+		menu.AddItem(sCommand, sItem, (StrContains(sCommand, "paint") != -1) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+	}
+
+	delete it;
+
+	menu.Display(client, -1);
+}
+
+public int CommandsMenu_Handler(Menu menu, MenuAction action, int param1, int param2)
+{
+	if(action == MenuAction_Select)
+	{
+		char sCommand[32];
+		menu.GetItem(param2, sCommand, sizeof(sCommand));
+		FakeClientCommand(param1, sCommand);
+	}
+	else if(action == MenuAction_End)
+	{
+		delete menu;
+	}
+
+	return 0;
+}
+
+public Action Command_ShavitTimerHelper(int client, int args)
+{
+	OpenHelperMenu(client);
+
+	return Plugin_Continue;
+}
+
+void OpenHelperMenu(int client)
+{
+	Menu menu = new Menu(HelperMenu_Handler);
+	menu.SetTitle("计时器助手菜单\n  ");
+
+	menu.AddItem("cp", "练习模式");
+	menu.AddItem("style", "切换模式");
+	menu.AddItem("hud", "HUD设置(打开后按1关闭整个hud!!!)");
+	menu.AddItem("bgm", "关闭bgm\n  ");
+	menu.AddItem("top", "排行");
+	menu.AddItem("mhud", "打开mhud菜单");
+	menu.AddItem("nv", "开启夜视仪");
+	menu.AddItem("nvs", "夜视仪设置");
+	menu.AddItem("yd", "预定地图");
+	menu.AddItem("rtv", "投票换图");
+	menu.AddItem("ext", "延长地图!!!");
+	menu.AddItem("myhelp", "打开指令菜单");
+
+	menu.Display(client, -1);
+}
+
+public int HelperMenu_Handler(Menu menu, MenuAction action, int param1, int param2)
+{
+	if(action == MenuAction_Select)
+	{
+		char sInfo[16];
+		menu.GetItem(param2, sInfo, sizeof(sInfo));
+
+		char sCommand[16];
+		FormatEx(sCommand, sizeof(sCommand), "sm_%s", sInfo);
+		FakeClientCommand(param1, sCommand);
+	}
+
+	else if(action == MenuAction_End)
+	{
+		delete menu;
+	}
+
+	return 0;
 }
 
 bool CanSegment(int client)
