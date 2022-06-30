@@ -57,7 +57,6 @@ int gI_Driver = Driver_unknown;
 
 bool gB_YouCanLoadZonesNow = false;
 bool gB_InsertedPrebuiltZones = false;
-bool gB_PrecachedStuff = false;
 bool gB_TierQueried = false;
 
 int gI_Tier = 1; // No floating numbers for tiers, sorry.
@@ -1190,6 +1189,7 @@ public void OnMapStart()
 {
 	GetLowercaseMapName(gS_Map);
 	LoadZoneSettings();
+	QueryTiers();
 	//UnloadZones();
 
 	if (gEV_Type == Engine_TF2)
@@ -1398,7 +1398,6 @@ void FindEntitiesToHook(const char[] classname, int form)
 public void OnMapEnd()
 {
 	gB_TierQueried = false;
-	gB_PrecachedStuff = false;
 	gB_InsertedPrebuiltZones = false;
 	gB_YouCanLoadZonesNow = false;
 	delete gH_DrawVisible;
@@ -1438,7 +1437,7 @@ void QueryTiers()
 
 	char sQuery[512];
 	FormatEx(sQuery, sizeof(sQuery), "SELECT map, tier FROM %smaptiers ORDER BY map ASC;", gS_MySQLPrefix);
-	gH_SQL.Query2(SQL_FillTierCache_Callback, sQuery, 0, DBPrio_High);
+	gH_SQL.Query(SQL_FillTierCache_Callback, sQuery, 0, DBPrio_High);
 
 	gB_TierQueried = true;
 }
@@ -1481,7 +1480,7 @@ public void SQL_FillTierCache_Callback(Database db, DBResultSet results, const c
 
 		char sQuery[512];
 		FormatEx(sQuery, sizeof(sQuery), "REPLACE INTO %smaptiers (map, tier) VALUES ('%s', %d);", gS_MySQLPrefix, gS_Map, gI_Tier);
-		gH_SQL.Query2(SQL_SetMapTier_Callback, sQuery, 0, DBPrio_High);
+		gH_SQL.Query(SQL_SetMapTier_Callback, sQuery, 0, DBPrio_High);
 	}
 }
 
@@ -1492,260 +1491,6 @@ public void SQL_SetMapTier_Callback(Database db, DBResultSet results, const char
 		LogError("Timer (rankings, set map tier) error! Reason: %s", error);
 
 		return;
-	}
-}
-
-bool GetButtonInfo(int entity, int& zone, int& track)
-{
-	char sName[32];
-	GetEntPropString(entity, Prop_Data, "m_iName", sName, 32);
-
-	if(StrContains(sName, "climb_") == -1)
-	{
-		return false;
-	}
-
-	if(StrContains(sName, "startbutton") != -1)
-	{
-		zone = Zone_Start;
-	}
-	else if(StrContains(sName, "endbutton") != -1)
-	{
-		zone = Zone_End;
-	}
-	else
-	{
-		return false;
-	}
-
-	int bonus = StrContains(sName, "bonus");
-
-	if (bonus != -1)
-	{
-		track = Track_Bonus;
-
-		if ('0' <= sName[bonus+5] <= '9')
-		{
-			track = StringToInt(sName[bonus+5]);
-
-			if (track < Track_Bonus || track > Track_Bonus_Last)
-			{
-				LogError("invalid track in climb button (%s) on %s", sName, gS_Map);
-				return false;
-			}
-		}
-	}
-	else
-	{
-		track = Track_Main;
-	}
-
-	return true;
-}
-
-public void Frame_HookButton(any data)
-{
-	int entity = EntRefToEntIndex(data);
-
-	if(entity == INVALID_ENT_REFERENCE)
-	{
-		return;
-	}
-
-	int zone = -1;
-	int track = Track_Main;
-
-	if (!GetButtonInfo(entity, zone, track))
-	{
-		return;
-	}
-
-	Shavit_MarkKZMap(track);
-	SDKHook(entity, SDKHook_UsePost, UsePost);
-}
-
-bool parse_mod_zone(char sName[32], int& zone, int& track, int& zonedata)
-{
-	// Please follow this naming scheme for this zones https://github.com/PMArkive/fly#trigger_multiple
-	// mod_zone_start
-	// mod_zone_end
-	// mod_zone_checkpoint_X
-	// mod_zone_bonus_X_start
-	// mod_zone_bonus_X_end
-	// mod_zone_bonus_X_checkpoint_X
-
-	// Normalize some zone names that bhop_somp_island and bhop_overthinker use
-	if (StrEqual(sName, "mod_zone_start_bonus") || StrEqual(sName, "mod_zone_bonus_start"))
-	{
-		sName = "mod_zone_bonus_1_start";
-	}
-	else if (StrEqual(sName, "mod_zone_end_bonus") || StrEqual(sName, "mod_zone_bonus_end"))
-	{
-		sName = "mod_zone_bonus_1_end";
-	}
-
-	if (StrContains(sName, "start") != -1)
-	{
-		zone = Zone_Start;
-	}
-	else if (StrContains(sName, "end") != -1)
-	{
-		zone = Zone_End;
-	}
-
-	if (StrContains(sName, "bonus") != -1 || StrContains(sName, "checkpoint") != -1)
-	{
-		char sections[8][12];
-		ExplodeString(sName, "_", sections, 8, 12, false);
-
-		int iCheckpointIndex = 3; // mod_zone_checkpoint_X
-
-		if (StrContains(sName, "bonus") != -1)
-		{
-			iCheckpointIndex = 5; // mod_zone_bonus_X_checkpoint_X
-
-			track = StringToInt(sections[3]); // 0 on failure to parse. 0 is less than Track_Bonus
-
-			if (track < Track_Bonus || track > Track_Bonus_Last)
-			{
-				LogError("invalid track in prebuilt map zone (%s) on %s", sName, gS_Map);
-				return false;
-			}
-		}
-
-		if (StrContains(sName, "checkpoint") != -1)
-		{
-			zone = Zone_Stage;
-			zonedata = StringToInt(sections[iCheckpointIndex]);
-
-			if (zonedata <= 0 || zonedata > MAX_STAGES)
-			{
-				LogError("invalid stage number in prebuilt map zone (%s) on %s", sName, gS_Map);
-				return false;
-			}
-		}
-	}
-
-	return true;
-}
-
-bool parse_climb_zone(char sName[32], int& zone, int& track, int& zonedata)
-{
-	// climb_startzone for the start of the main course.
-	// climb_endzone for the end of the main course.
-	// climb_bonusX_startzone for the start of a bonus course where X is the bonus number.
-	// climb_bonusX_endzone for the end of a bonus course where X is the bonus number.
-
-	if (StrContains(sName, "startzone") != -1)
-	{
-		zone = Zone_Start;
-	}
-	else if (StrContains(sName, "endzone") != -1)
-	{
-		zone = Zone_End;
-	}
-
-	int bonus = StrContains(sName, "bonus");
-
-	if (bonus != -1)
-	{
-		track = Track_Bonus;
-
-		if ('0' <= sName[bonus+5] <= '9')
-		{
-			track = StringToInt(sName[bonus+5]);
-
-			if (track < Track_Bonus || track > Track_Bonus_Last)
-			{
-				LogError("invalid track in prebuilt map zone (%s) on %s", sName, gS_Map);
-				return false;
-			}
-		}
-	}
-
-	return true;
-}
-
-public void Frame_HookTrigger(any data)
-{
-	int entity = EntRefToEntIndex(data);
-
-	if (entity == INVALID_ENT_REFERENCE || gI_EntityZone[entity] > -1)
-	{
-		return;
-	}
-
-	char sName[32];
-	GetEntPropString(entity, Prop_Data, "m_iName", sName, 32);
-
-	int zone = -1;
-	int zonedata = 0;
-	int track = Track_Main;
-
-	if (StrContains(sName, "mod_zone_") == 0)
-	{
-		if (!parse_mod_zone(sName, zone, track, zonedata))
-		{
-			return;
-		}
-	}
-	else if (StrContains(sName, "climb_") == 0)
-	{
-		if (!parse_climb_zone(sName, zone, track, zonedata))
-		{
-			return;
-		}
-	}
-	else
-	{
-		return;
-	}
-
-	if(zone != -1)
-	{
-		int iZoneIndex = gI_MapZones;
-
-		// Check for existing prebuilt zone in the cache and reuse slot.
-		for (int i = 0; i < gI_MapZones; i++)
-		{
-			if (gA_ZoneCache[i].bPrebuilt && gA_ZoneCache[i].iZoneType == zone && gA_ZoneCache[i].iZoneTrack == track && gA_ZoneCache[i].iZoneData == zonedata)
-			{
-				iZoneIndex = i;
-				break;
-			}
-		}
-
-		gI_EntityZone[entity] = iZoneIndex;
-		gA_ZoneCache[iZoneIndex].iEntityID = entity;
-
-		SDKHook(entity, SDKHook_StartTouchPost, StartTouchPost);
-		SDKHook(entity, SDKHook_EndTouchPost, EndTouchPost);
-		SDKHook(entity, SDKHook_TouchPost, TouchPost);
-
-		if (iZoneIndex != gI_MapZones)
-		{
-			return;
-		}
-
-		float maxs[3], mins[3], origin[3];
-		GetEntPropVector(entity, Prop_Send, "m_vecMaxs", maxs);
-		GetEntPropVector(entity, Prop_Send, "m_vecMins", mins);
-		GetEntPropVector(entity, Prop_Send, "m_vecOrigin", origin);
-
-		//origin[2] -= (maxs[2] - 2.0); // so you don't get stuck in the ground
-		origin[2] += 1.0; // so you don't get stuck in the ground
-
-		AddZoneToCache(
-			zone,
-			origin[0]+mins[0], origin[1]+mins[1], origin[2]+mins[2], // corner1_xyz
-			origin[0]+maxs[0], origin[1]+maxs[1], origin[2]+maxs[2], // corner2_xyz
-			0.0, 0.0, 0.0, // destination_xyz (Zone_Teleport/Zone_Stage)
-			track,
-			-1,       // iDatabaseID
-			0,        // iZoneFlags
-			zonedata,
-			true      // bPrebuilt
-		);
 	}
 }
 
@@ -2596,7 +2341,7 @@ public Action Command_SetTier(int client, int args)
 	data.WriteCell(client ? GetClientSerial(client) : 0);
 	data.WriteString(map);
 
-	gH_SQL.Query2(SQL_SetMapTier_Callback, sQuery, data);
+	gH_SQL.Query(SQL_SetMapTier_Callback, sQuery, data);
 
 	return Plugin_Handled;
 }
