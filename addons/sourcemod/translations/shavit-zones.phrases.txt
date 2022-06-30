@@ -41,6 +41,33 @@
 		"en"		"Start position has been {1}deleted{2}."
 		"chi"		"自定义起始区域已{1}删除{2}."
 	}
+	// ---------- ZoneHook ---------- //
+	"ZoneHook_Crosshair"
+	{
+		"en"        "Entity under crosshair"
+	}
+	"ZoneHook_Tpto"
+	{
+		"en"        "Teleport to (stops timer)"
+	}
+	"ZoneHook_Draw"
+	{
+		"en"        "Draw beams around entity"
+	}
+	"ZoneHook_Zonetype"
+	{
+		"#format"   "{1:s}"
+		"en"        "Zone type: {1}"
+	}
+	"ZoneHook_Hooktype"
+	{
+		"#format"   "{1:s},{2:s}"
+		"en"        "Hook type: {1} ({2})"
+	}
+	"ZoneHook_Confirm"
+	{
+		"en"        "Go to confirm"
+	}
 	// ---------- Commands ---------- //
 	"StageCommandAlive"
 	{
@@ -68,6 +95,11 @@
 		"#format"	"{1:s},{2:s}"
 		"en"		"You {1}cannot{2} setup mapzones when you're dead."
 		"chi"		"你必须{1}活着{2}才能设置区域."
+	}
+	"ZonesNotSQL"
+	{
+		"#format"   "{1:s},{2:s}"
+		"en"        "You {1}cannot{2} add/edit/delete non-sql zones."
 	}
 	"ZoneCustomSpawnMenuTitle"
 	{
@@ -362,6 +394,15 @@
 		"en"		"Edit a map zone"
 		"chi"		"编辑区域"
 	}
+	"HookZone"
+	{
+		"en"        "Hook a trigger, teleporter, or button."
+	}
+	"HookZone2"
+	{
+		"#format"   "{1:s}"
+		"en"        "Hook {1}"
+	}
 	"ZoneEditTitle"
 	{
 		"en"		"Choose a zone to edit:"
@@ -511,7 +552,7 @@
 	"ZoneStageEnter"
 	{
 		"#format"	"{1:s},{2:s},{3:d},{4:s},{5:s},{6:s}{7:s}"
-		"en"		"{1}You have reached stage {2}{3}{4} with a time of {5}{6}{7}."
+		"en"		"{1}Stage {2}{3}{4} @ {5}{6}{7} "
 		"chi"		"{1}检查点 [{2}{3}{4}] | 用时: {5}{6}"
 	}
 	"Zone_Start"

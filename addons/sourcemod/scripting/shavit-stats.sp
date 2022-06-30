@@ -47,7 +47,7 @@ bool gB_Mapchooser = false;
 bool gB_Rankings = false;
 
 // database handle
-Database2 gH_SQL = null;
+Database gH_SQL = null;
 char gS_MySQLPrefix[32];
 
 // cache
@@ -60,6 +60,7 @@ int gI_TargetSteamID[MAXPLAYERS+1];
 char gS_TargetName[MAXPLAYERS+1][MAX_NAME_LENGTH];
 
 // playtime things
+Transaction gH_DisconnectPlaytimeQueries = null;
 float gF_PlaytimeStart[MAXPLAYERS+1];
 float gF_PlaytimeStyleStart[MAXPLAYERS+1];
 int gI_CurrentStyle[MAXPLAYERS+1];
@@ -143,12 +144,44 @@ public void OnPluginStart()
 	}
 
 	CreateTimer(2.5 * 60.0, Timer_SavePlaytime, 0, TIMER_REPEAT);
+	CreateTimer(3.0, Timer_SaveDisconnectPlaytime, 0, TIMER_REPEAT);
+}
+
+public void OnMapEnd()
+{
+	FlushDisconnectPlaytime();
+}
+
+public void OnPluginEnd()
+{
+	FlushDisconnectPlaytime();
+}
+
+void FlushDisconnectPlaytime()
+{
+	float now = GetEngineTime();
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsValidClient(i))
+		{
+			continue;
+		}
+
+		SavePlaytime(i, now, gH_DisconnectPlaytimeQueries);
+	}
+
+	if (gH_DisconnectPlaytimeQueries != null)
+	{
+		gH_SQL.Execute(gH_DisconnectPlaytimeQueries, Trans_SavePlaytime_Success, Trans_SavePlaytime_Failure);
+		gH_DisconnectPlaytimeQueries = null;
+	}
 }
 
 public void Shavit_OnDatabaseLoaded()
 {
 	GetTimerSQLPrefix(gS_MySQLPrefix, 32);
-	gH_SQL = view_as<Database2>(Shavit_GetDatabase());
+	gH_SQL = Shavit_GetDatabase();
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -273,7 +306,7 @@ void QueryPlaytime(int client)
 	FormatEx(sQuery, sizeof(sQuery),
 		"SELECT style, playtime FROM %sstyleplaytime WHERE auth = %d;",
 		gS_MySQLPrefix, iSteamID);
-	gH_SQL.Query2(SQL_QueryStylePlaytime_Callback, sQuery, GetClientSerial(client), DBPrio_Normal);
+	QueryLog(gH_SQL, SQL_QueryStylePlaytime_Callback, sQuery, GetClientSerial(client), DBPrio_Normal);
 }
 
 public void SQL_QueryStylePlaytime_Callback(Database db, DBResultSet results, const char[] error, any data)
@@ -308,13 +341,7 @@ public void OnClientDisconnect(int client)
 		return;
 	}
 
-	Transaction2 trans = null;
-	SavePlaytime(client, GetEngineTime(), trans);
-
-	if (trans != null)
-	{
-		gH_SQL.Execute(trans, Trans_SavePlaytime_Success, Trans_SavePlaytime_Failure);
-	}
+	SavePlaytime(client, GetEngineTime(), gH_DisconnectPlaytimeQueries);
 }
 
 public void Shavit_OnStyleChanged(int client, int oldstyle, int newstyle, int track, bool manual)
@@ -372,7 +399,7 @@ public void OnLibraryRemoved(const char[] name)
 	}
 }
 
-void SavePlaytime222(int client, float now, Transaction2 &trans, int style, int iSteamID)
+void SavePlaytime222(int client, float now, Transaction&trans, int style, int iSteamID)
 {
 	char sQuery[512];
 
@@ -429,10 +456,10 @@ void SavePlaytime222(int client, float now, Transaction2 &trans, int style, int 
 
 	if (trans == null)
 	{
-		trans = view_as<Transaction2>(new Transaction());
+		trans = new Transaction();
 	}
 
-	trans.AddQuery2(sQuery);
+	AddQueryLog(trans, sQuery);
 }
 
 public void Trans_SavePlaytime_Success(Database db, any data, int numQueries, DBResultSet[] results, any[] queryData)
@@ -444,7 +471,7 @@ public void Trans_SavePlaytime_Failure(Database db, any data, int numQueries, co
 	LogError("Timer (stats save playtime) SQL query %d/%d failed. Reason: %s", failIndex, numQueries, error);
 }
 
-void SavePlaytime(int client, float now, Transaction2 &trans)
+void SavePlaytime(int client, float now, Transaction& trans)
 {
 	int iSteamID = GetSteamAccountID(client);
 
@@ -472,7 +499,7 @@ public Action Timer_SavePlaytime(Handle timer, any data)
 		return Plugin_Continue;
 	}
 
-	Transaction2 trans = null;
+	Transaction trans = null;
 	float now = GetEngineTime();
 
 	for (int i = 1; i <= MaxClients; i++)
@@ -500,6 +527,18 @@ public Action Timer_SavePlaytime(Handle timer, any data)
 	return Plugin_Continue;
 }
 
+public Action Timer_SaveDisconnectPlaytime(Handle timer, any data)
+{
+	if (gH_SQL == null || gH_DisconnectPlaytimeQueries == null)
+	{
+		return Plugin_Continue;
+	}
+
+	gH_SQL.Execute(gH_DisconnectPlaytimeQueries, Trans_SavePlaytime_Success, Trans_SavePlaytime_Failure);
+	gH_DisconnectPlaytimeQueries = null;
+	return Plugin_Continue;
+}
+
 public Action Command_Playtime(int client, int args)
 {
 	if (!IsValidClient(client))
@@ -513,7 +552,7 @@ public Action Command_Playtime(int client, int args)
 		"UNION " ...
 		"(SELECT -1, '', u2.playtime, COUNT(*) as ownrank FROM %susers u1 JOIN (SELECT playtime FROM %susers WHERE auth = %d) u2 WHERE u1.playtime >= u2.playtime);",
 		gS_MySQLPrefix, gS_MySQLPrefix, gS_MySQLPrefix, GetSteamAccountID(client));
-	gH_SQL.Query2(SQL_TopPlaytime_Callback, sQuery, GetClientSerial(client), DBPrio_Normal);
+	QueryLog(gH_SQL, SQL_TopPlaytime_Callback, sQuery, GetClientSerial(client), DBPrio_Normal);
 
 	return Plugin_Handled;
 }
@@ -781,7 +820,7 @@ Action OpenStatsMenu(int client, int steamid, int style = 0, int item = 0)
 			gS_MySQLPrefix, steamid, style, gS_MySQLPrefix, gS_MySQLPrefix, steamid, style
 		);
 
-		gH_SQL.Query2(OpenStatsMenu_Mapchooser_Callback, sQuery, data, DBPrio_Low);
+		QueryLog(gH_SQL, OpenStatsMenu_Mapchooser_Callback, sQuery, data, DBPrio_Low);
 
 		return Plugin_Handled;
 	}
@@ -872,7 +911,7 @@ Action OpenStatsMenu_Main(int steamid, int style, DataPack data)
 
 	StrCat(sQuery, sizeof(sQuery), ";");
 
-	gH_SQL.Query2(OpenStatsMenuCallback, sQuery, data, DBPrio_Low);
+	QueryLog(gH_SQL, OpenStatsMenuCallback, sQuery, data, DBPrio_Low);
 
 	return Plugin_Handled;
 }
@@ -1181,7 +1220,7 @@ void ShowMaps(int client)
 
 	gB_CanOpenMenu[client] = false;
 
-	gH_SQL.Query2(ShowMapsCallback, sQuery, GetClientSerial(client), DBPrio_High);
+	QueryLog(gH_SQL, ShowMapsCallback, sQuery, GetClientSerial(client), DBPrio_High);
 }
 
 public void ShowMapsCallback(Database db, DBResultSet results, const char[] error, any data)
@@ -1316,7 +1355,7 @@ public int MenuHandler_ShowMaps(Menu menu, MenuAction action, int param1, int pa
 		char sQuery[512];
 		FormatEx(sQuery, 512, "SELECT u.name, p.time, p.jumps, p.style, u.auth, p.date, p.map, p.strafes, p.sync, p.points FROM %splayertimes p JOIN %susers u ON p.auth = u.auth WHERE p.id = '%s' LIMIT 1;", gS_MySQLPrefix, gS_MySQLPrefix, sInfo);
 
-		gH_SQL.Query2(SQL_SubMenu_Callback, sQuery, GetClientSerial(param1));
+		QueryLog(gH_SQL, SQL_SubMenu_Callback, sQuery, GetClientSerial(param1));
 	}
 	else if(action == MenuAction_Cancel && param2 == MenuCancel_ExitBack)
 	{

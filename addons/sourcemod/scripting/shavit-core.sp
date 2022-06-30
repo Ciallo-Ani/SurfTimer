@@ -46,6 +46,8 @@
 #include <shavit/sql-create-tables-and-migrations.sp>
 #include <shavit/physicsuntouch>
 
+#include <adminmenu>
+
 #pragma newdecls required
 #pragma semicolon 1
 
@@ -58,8 +60,8 @@ DynamicHook gH_AcceptInput; // used for hooking player_speedmod's AcceptInput
 DynamicHook gH_TeleportDhook = null;
 
 // database handle
-Database2 gH_SQL = null;
-bool gB_MySQL = false;
+Database gH_SQL = null;
+int gI_Driver = Driver_unknown;
 
 // forwards
 Handle gH_Forwards_Start = null;
@@ -120,6 +122,10 @@ bool gB_Zones = false;
 bool gB_ReplayPlayback = false;
 bool gB_Rankings = false;
 bool gB_HUD = false;
+bool gB_AdminMenu = false;
+
+TopMenu gH_AdminMenu = null;
+TopMenuObject gH_TimerCommands = INVALID_TOPMENUOBJECT;
 
 // cvars
 Convar gCV_Restart = null;
@@ -183,6 +189,8 @@ public Plugin myinfo =
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
+	new Convar("shavit_core_log_sql", "0", "Whether to log SQL queries from the timer.", 0, true, 0.0, true, 1.0);
+
 	Bhopstats_CreateNatives();
 	Shavit_Style_Settings_Natives();
 
@@ -402,6 +410,7 @@ public void OnPluginStart()
 	gB_ReplayPlayback = LibraryExists("shavit-replay-playback");
 	gB_Rankings = LibraryExists("shavit-rankings");
 	gB_HUD = LibraryExists("shavit-hud");
+	gB_AdminMenu = LibraryExists("adminmenu");
 
 	// database connections
 	SQL_DBConnect();
@@ -409,6 +418,12 @@ public void OnPluginStart()
 	// late
 	if(gB_Late)
 	{
+		if (gB_AdminMenu && (gH_AdminMenu = GetAdminTopMenu()) != null)
+		{
+			OnAdminMenuCreated(gH_AdminMenu);
+			OnAdminMenuReady(gH_AdminMenu);
+		}
+
 		for(int i = 1; i <= MaxClients; i++)
 		{
 			if(IsValidClient(i))
@@ -417,6 +432,33 @@ public void OnPluginStart()
 			}
 		}
 	}
+}
+
+public void OnAdminMenuCreated(Handle topmenu)
+{
+	gH_AdminMenu = TopMenu.FromHandle(topmenu);
+
+	if ((gH_TimerCommands = gH_AdminMenu.FindCategory("Timer Commands")) == INVALID_TOPMENUOBJECT)
+	{
+		gH_TimerCommands = gH_AdminMenu.AddCategory("Timer Commands", CategoryHandler, "shavit_admin", ADMFLAG_RCON);
+	}
+}
+
+public void CategoryHandler(Handle topmenu, TopMenuAction action, TopMenuObject object_id, int param, char[] buffer, int maxlength)
+{
+	if(action == TopMenuAction_DisplayTitle)
+	{
+		FormatEx(buffer, maxlength, "%T:", "TimerCommands", param);
+	}
+	else if(action == TopMenuAction_DisplayOption)
+	{
+		FormatEx(buffer, maxlength, "%T", "TimerCommands", param);
+	}
+}
+
+public void OnAdminMenuReady(Handle topmenu)
+{
+	gH_AdminMenu = TopMenu.FromHandle(topmenu);
 }
 
 void LoadDHooks()
@@ -557,6 +599,10 @@ public void OnLibraryAdded(const char[] name)
 	{
 		gB_Eventqueuefix = true;
 	}
+	else if (StrEqual(name, "adminmenu"))
+	{
+		gB_AdminMenu = true;
+	}
 }
 
 public void OnLibraryRemoved(const char[] name)
@@ -580,6 +626,12 @@ public void OnLibraryRemoved(const char[] name)
 	else if(StrEqual(name, "eventqueuefix"))
 	{
 		gB_Eventqueuefix = false;
+	}
+	else if (StrEqual(name, "adminmenu"))
+	{
+		gB_AdminMenu = false;
+		gH_AdminMenu = null;
+		gH_TimerCommands = INVALID_TOPMENUOBJECT;
 	}
 }
 
@@ -1025,6 +1077,7 @@ public Action Command_DeleteMap(int client, int args)
 			ReplyToCommand(client, "Deleted all rankings for %s.", gS_DeleteMap[client]);
 		}
 
+		Shavit_LogMessage("%L - deleted all map data for `%s`", client, gS_DeleteMap[client]);
 		ReplyToCommand(client, "Finished deleting data for %s.", gS_DeleteMap[client]);
 		gS_DeleteMap[client] = "";
 	}
@@ -1119,6 +1172,7 @@ public Action Command_WipePlayer(int client, int args)
 		Shavit_PrintToChat(client, "Deleting data for SteamID %s[U:1:%u]%s...",
 			gS_ChatStrings.sVariable, gI_WipePlayerID[client], gS_ChatStrings.sText);
 
+		Shavit_LogMessage("%L - wiped [U:1:%u]'s player data", client, gI_WipePlayerID[client]);
 		DeleteUserData(client, gI_WipePlayerID[client]);
 
 		strcopy(gS_Verification[client], 8, "");
@@ -1158,15 +1212,15 @@ public void Trans_DeleteRestOfUserFailed(Database db, DataPack hPack, int numQue
 
 void DeleteRestOfUser(int iSteamID, DataPack hPack)
 {
-	Transaction2 hTransaction = new Transaction2();
+	Transaction trans = new Transaction();
 	char sQuery[256];
 
 	FormatEx(sQuery, 256, "DELETE FROM %splayertimes WHERE auth = %d;", gS_MySQLPrefix, iSteamID);
-	hTransaction.AddQuery2(sQuery);
+	AddQueryLog(trans, sQuery);
 	FormatEx(sQuery, 256, "DELETE FROM %susers WHERE auth = %d;", gS_MySQLPrefix, iSteamID);
-	hTransaction.AddQuery2(sQuery);
+	AddQueryLog(trans, sQuery);
 
-	gH_SQL.Execute(hTransaction, Trans_DeleteRestOfUserSuccess, Trans_DeleteRestOfUserFailed, hPack);
+	gH_SQL.Execute(trans, Trans_DeleteRestOfUserSuccess, Trans_DeleteRestOfUserFailed, hPack);
 }
 
 void DeleteUserData(int client, const int iSteamID)
@@ -1180,7 +1234,7 @@ void DeleteUserData(int client, const int iSteamID)
 		"SELECT id, style, track, map FROM %swrs WHERE auth = %d;",
 		gS_MySQLPrefix, iSteamID);
 
-	gH_SQL.Query2(SQL_DeleteUserData_GetRecords_Callback, sQuery, hPack, DBPrio_High);
+	QueryLog(gH_SQL, SQL_DeleteUserData_GetRecords_Callback, sQuery, hPack, DBPrio_High);
 }
 
 public void SQL_DeleteUserData_GetRecords_Callback(Database db, DBResultSet results, const char[] error, DataPack hPack)
@@ -1658,6 +1712,8 @@ public void Player_Death(Event event, const char[] name, bool dontBroadcast)
 
 public int Native_GetDatabase(Handle handler, int numParams)
 {
+	if (numParams > 0)
+		SetNativeCellRef(1, gI_Driver);
 	return gH_SQL ? view_as<int>(CloneHandle(gH_SQL, handler)) : 0;
 }
 
@@ -2640,10 +2696,16 @@ public void OnClientPutInServer(int client)
 
 	char sQuery[512];
 
-	if(gB_MySQL)
+	if (gI_Driver == Driver_mysql)
 	{
 		FormatEx(sQuery, 512,
 			"INSERT INTO %susers (auth, name, ip, lastlogin) VALUES (%d, '%s', %d, %d) ON DUPLICATE KEY UPDATE name = '%s', ip = %d, lastlogin = %d;",
+			gS_MySQLPrefix, iSteamID, sEscapedName, iIPAddress, iTime, sEscapedName, iIPAddress, iTime);
+	}
+	else if (gI_Driver == Driver_pgsql)
+	{
+		FormatEx(sQuery, 512,
+			"INSERT INTO %susers (auth, name, ip, lastlogin) VALUES (%d, '%s', %d, %d) ON CONFLICT(auth) DO UPDATE SET name = '%s', ip = %d, lastlogin = %d;",
 			gS_MySQLPrefix, iSteamID, sEscapedName, iIPAddress, iTime, sEscapedName, iIPAddress, iTime);
 	}
 	else
@@ -2653,7 +2715,7 @@ public void OnClientPutInServer(int client)
 			gS_MySQLPrefix, iSteamID, sEscapedName, iIPAddress, iTime);
 	}
 
-	gH_SQL.Query2(SQL_InsertUser_Callback, sQuery, GetClientSerial(client));
+	QueryLog(gH_SQL, SQL_InsertUser_Callback, sQuery, GetClientSerial(client));
 }
 
 public void SQL_InsertUser_Callback(Database db, DBResultSet results, const char[] error, any data)
@@ -2754,10 +2816,10 @@ bool LoadMessages()
 void SQL_DBConnect()
 {
 	GetTimerSQLPrefix(gS_MySQLPrefix, 32);
-	gH_SQL = GetTimerDatabaseHandle2();
-	gB_MySQL = IsMySQLDatabase(gH_SQL);
+	gH_SQL = GetTimerDatabaseHandle();
+	gI_Driver = GetDatabaseDriver(gH_SQL);
 
-	SQL_CreateTables(gH_SQL, gS_MySQLPrefix, gB_MySQL);
+	SQL_CreateTables(gH_SQL, gS_MySQLPrefix, gI_Driver);
 }
 
 public void Shavit_OnEnterZone(int client, int type, int track, int id, int entity)
