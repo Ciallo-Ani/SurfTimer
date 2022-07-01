@@ -137,7 +137,7 @@ void LoadDHooks()
 		StartPrepSDKCall(SDKCall_EntityList);
 	
 	if(!PrepSDKCall_SetFromConf(gamedataConf, SDKConf_Signature, "FindEntityByName"))
-		SetFailState("Faild to find FindEntityByName signature.");
+		SetFailState("Failed to find FindEntityByName signature.");
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_ByValue);
 	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL | VDECODE_FLAG_ALLOWWORLD);
 	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
@@ -146,23 +146,23 @@ void LoadDHooks()
 	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL | VDECODE_FLAG_ALLOWWORLD);
 	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_ByValue); 
 	g_hFindEntityByName = EndPrepSDKCall();
-	
-	Handle addEventThree = DHookCreateDetour(Address_Null, CallConv_THISCALL, ReturnType_Void, ThisPointer_Ignore);
-	if(!DHookSetFromConf(addEventThree, gamedataConf, SDKConf_Signature, "AddEventThree"))
-		SetFailState("Faild to find AddEventThree signature.");
-	DHookAddParam(addEventThree, HookParamType_CharPtr);
-	DHookAddParam(addEventThree, HookParamType_CharPtr);
-	DHookAddParam(addEventThree, HookParamType_Object, 20, DHookPass_ByVal|DHookPass_ODTOR|DHookPass_OCTOR|DHookPass_OASSIGNOP);
-	DHookAddParam(addEventThree, HookParamType_Float);
-	DHookAddParam(addEventThree, HookParamType_Int);
-	DHookAddParam(addEventThree, HookParamType_Int);
-	DHookAddParam(addEventThree, HookParamType_Int);
-	if(!DHookEnableDetour(addEventThree, false, DHook_AddEventThree))
+
+	DynamicDetour addEventThree = new DynamicDetour(Address_Null, CallConv_THISCALL, ReturnType_Void, ThisPointer_Ignore);
+	if(!addEventThree.SetFromConf(gamedataConf, SDKConf_Signature, "AddEventThree"))
+		SetFailState("Failed to find AddEventThree signature.");
+	addEventThree.AddParam(HookParamType_CharPtr);
+	addEventThree.AddParam(HookParamType_CharPtr);
+	addEventThree.AddParam(HookParamType_ObjectPtr);
+	addEventThree.AddParam(HookParamType_Float);
+	addEventThree.AddParam(HookParamType_CBaseEntity);
+	addEventThree.AddParam(HookParamType_CBaseEntity);
+	addEventThree.AddParam(HookParamType_Int);
+	if(!addEventThree.Enable(Hook_Pre, DHook_AddEventThree))
 		SetFailState("Couldn't enable AddEventThree detour.");
 	
 	Handle activateMultiTrigger = DHookCreateDetour(Address_Null, CallConv_THISCALL, ReturnType_Void, ThisPointer_CBaseEntity);
 	if(!DHookSetFromConf(activateMultiTrigger, gamedataConf, SDKConf_Signature, "ActivateMultiTrigger"))
-		SetFailState("Faild to find ActivateMultiTrigger signature.");
+		SetFailState("Failed to find ActivateMultiTrigger signature.");
 	DHookAddParam(activateMultiTrigger, HookParamType_CBaseEntity);
 	if(!DHookEnableDetour(activateMultiTrigger, false, DHook_ActivateMultiTrigger))
 		SetFailState("Couldn't enable ActivateMultiTrigger detour.");
@@ -190,25 +190,25 @@ int EntityToBCompatRef(Address player)
 	return entry_idx;
 }
 
-public MRESReturn DHook_AddEventThree(Handle hParams)
+public MRESReturn DHook_AddEventThree(DHookParam hParams)
 {
 	event_t event;
-	event.activator = EntityToBCompatRef(view_as<Address>(DHookGetParam(hParams, 5)));
+	event.activator = EntityToBCompatRef(hParams.GetAddress(5));
 	int entIndex = EntRefToEntIndex(event.activator);
 
 	if (entIndex < 1 || entIndex > MaxClients)
 	{
 		return MRES_Ignored;
 	}
-	
-	DHookGetParamString(hParams, 1, event.target, 64);
-	DHookGetParamString(hParams, 2, event.targetInput, 64);
+
+	hParams.GetString(1, event.target, 64);
+	hParams.GetString(2, event.targetInput, 64);
 	ResolveVariantValue(hParams, event);
-	
-	int ticks = RoundToCeil((view_as<float>(DHookGetParam(hParams, 4)) - FLT_EPSILON) / GetTickInterval());
+
+	int ticks = RoundToCeil((view_as<float>(hParams.Get(4)) - FLT_EPSILON) / GetTickInterval());
 	event.delay = float(ticks);
-	event.caller = EntityToBCompatRef(view_as<Address>(DHookGetParam(hParams, 6)));
-	event.outputID = DHookGetParam(hParams, 7);
+	event.caller = EntityToBCompatRef(hParams.GetAddress(6));
+	event.outputID = hParams.Get(7);
 
 	#if defined DEBUG
 		PrintToServer("[%i] AddEventThree: %s, %s, %s, %f, %i, %i, %i, time: %f", GetGameTickCount(), event.target, event.targetInput, event.variantValue, event.delay, entIndex, EntRefToEntIndex(event.caller), event.outputID, GetGameTime());
@@ -218,17 +218,17 @@ public MRESReturn DHook_AddEventThree(Handle hParams)
 	return MRES_Supercede;
 }
 
-public void ResolveVariantValue(Handle &params, event_t event)
+public void ResolveVariantValue(DHookParam &params, event_t event)
 {
-	int type = DHookGetParamObjectPtrVar(params, 3, 16, ObjectValueType_Int);
-	
+	int type = params.GetObjectVar(3, 16, ObjectValueType_Int);
+
 	switch(type)
 	{
 		//Float
 		case 1:
 		{
-			float fVar = DHookGetParamObjectPtrVar(params, 3, 0, ObjectValueType_Float);
-			
+			float fVar = params.GetObjectVar(3, 0, ObjectValueType_Float);
+
 			//Type recognition is difficult, even for valve programmers. Sometimes floats are integers, lets fix that.
 			if(FloatAbs(fVar - RoundFloat(fVar)) < 0.000001)
 			{
@@ -238,17 +238,17 @@ public void ResolveVariantValue(Handle &params, event_t event)
 				FloatToString(fVar, event.variantValue, sizeof(event.variantValue));
 			}
 		}
-		
+
 		//Integer
 		case 5:
 		{
-			int iVar = DHookGetParamObjectPtrVar(params, 3, 0, ObjectValueType_Int);
+			int iVar = params.GetObjectVar(3, 0, ObjectValueType_Int);
 			IntToString(iVar, event.variantValue, sizeof(event.variantValue));
 		}
-		
+
 		default:
 		{
-			DHookGetParamObjectPtrString(params, 3, 0, ObjectValueType_String, event.variantValue, sizeof(event.variantValue));
+			params.GetObjectVarString(3, 0, ObjectValueType_String, event.variantValue, sizeof(event.variantValue));
 		}
 	}
 }
