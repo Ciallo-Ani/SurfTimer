@@ -68,6 +68,7 @@ jobs:
       - name: Compile shavit plugin
         run: |
           echo -e "\nCompiling shavit plugins..."
+          ls
           spcomp64 -O2 -i ./include eventqueuefix.sp
           spcomp64 -O2 -i ./include shavit-chat.sp
           spcomp64 -O2 -i ./include shavit-checkpoints.sp
