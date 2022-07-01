@@ -26,12 +26,11 @@ jobs:
         run: |
           SOURCEMOD_PATH=$GITHUB_WORKSPACE/addons/sourcemod
           SCRIPTING_PATH=$GITHUB_WORKSPACE/addons/sourcemod/scripting
-          INCLUDE_PATH=$GITHUB_WORKSPACE/addons/sourcemod/scripting/include
           GAMEDATA_PATH=$GITHUB_WORKSPACE/addons/sourcemod/gamedata
           EXT_PATH=$GITHUB_WORKSPACE/addons/sourcemod/extensions
           echo "SOURCEMOD_PATH=$SOURCEMOD_PATH" >> $GITHUB_ENV
           echo "SCRIPTING_PATH=$SCRIPTING_PATH" >> $GITHUB_ENV
-          echo "INCLUDE_PATH=$SCRIPTING_PATH/include" >> $GITHUB_ENV
+          echo "INCLUDE_PATH=$SOURCEMOD_PATH/scripting/include" >> $GITHUB_ENV
           echo "GAMEDATA_PATH=$GAMEDATA_PATH" >> $GITHUB_ENV
           echo "EXT_PATH=$EXT_PATH" >> $GITHUB_ENV
           echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
@@ -65,36 +64,35 @@ jobs:
           git clone https://github.com/GAMMACASE/HeadBugFix.git
           cp -r HeadBugFix/addons ./
           rm -rf ./HeadBugFix
-      # - name: Compile shavit plugin
-      #   run: |
-      #     echo -e "\nCompiling shavit plugins..."
-      #     ls
-      #     spcomp64 -O2 -i ./include eventqueuefix.sp
-      #     spcomp64 -O2 -i ./include shavit-chat.sp
-      #     spcomp64 -O2 -i ./include shavit-checkpoints.sp
-      #     spcomp64 -O2 -i ./include shavit-core.sp
-      #     spcomp64 -O2 -i ./include shavit-hud.sp
-      #     spcomp64 -O2 -i ./include shavit-misc.sp
-      #     spcomp64 -O2 -i ./include shavit-paint.sp
-      #     spcomp64 -O2 -i ./include shavit-replay-playback.sp
-      #     spcomp64 -O2 -i ./include shavit-replay-recorder.sp
-      #     spcomp64 -O2 -i ./include shavit-sounds.sp
-      #     spcomp64 -O2 -i ./include shavit-stats.sp
-      #     spcomp64 -O2 -i ./include shavit-tas.sp
-      #     spcomp64 -O2 -i ./include shavit-timelimit.sp
-      #     spcomp64 -O2 -i ./include shavit-wr.sp
-      #     spcomp64 -O2 -i ./include shavit-zones.sp
-      #     mkdir ../plugins && mv ./*.smx ../plugins
-      #   working-directory: ${{ env.SCRIPTING_PATH }}/
+      - name: Compile shavit plugin
+        run: |
+          echo -e "\nCompiling shavit plugins..."
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH eventqueuefix.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-chat.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-checkpoints.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-core.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-hud.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-misc.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-paint.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-replay-playback.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-replay-recorder.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-sounds.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-stats.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-tas.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-timelimit.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-wr.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH shavit-zones.sp
+          mkdir ../plugins && mv ./*.smx ../plugins
+        working-directory: ${{ env.SCRIPTING_PATH }}/
 
-      # - name: Compile Requirements
-      #   run: |
-      #     echo -e "\nCompiling required plugins..."
-      #     spcomp64 -O2 -i ./include momsurffix2.sp
-      #     spcomp64 -O2 -i ./include rngfix.sp
-      #     spcomp64 -O2 -i ./include headbugfix.sp
-      #     mv ./*.smx ../plugins
-      #   working-directory: ${{ env.SCRIPTING_PATH }}/
+      - name: Compile Requirements
+        run: |
+          echo -e "\nCompiling required plugins..."
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH momsurffix2.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH rngfix.sp
+          spcomp64 -O2 -i $includePath -i $INCLUDE_PATH headbugfix.sp
+          mv ./*.smx ../plugins
+        working-directory: ${{ env.SCRIPTING_PATH }}/
 
       - name: Uploading artifact
         uses: actions/upload-artifact@v2
