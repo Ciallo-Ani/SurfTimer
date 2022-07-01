@@ -42,9 +42,6 @@ jobs:
       - name: Download Requirements
         run: |
           echo -e "\nDownloading requirements..."
-          wget https://github.com/peace-maker/DHooks2/releases/download/v2.2.0-detours17/dhooks-2.2.0-detours17-sm110.zip
-          unzip -o dhooks-2.2.0-detours17-sm110.zip
-          rm -rf ./dhooks-2.2.0-detours17-sm110.zip
 
           wget https://github.com/rtldg/sm_closestpos/releases/download/v1.1.1/sm_closestpos-sm1.10-ubuntu-18.04-b0a9b88.zip
           mv sm_closestpos-sm1.10-ubuntu-18.04-b0a9b88.zip sm_closestpos-sm1.10-ubuntu.zip
