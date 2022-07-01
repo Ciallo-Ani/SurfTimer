@@ -30,7 +30,7 @@ jobs:
           EXT_PATH=$GITHUB_WORKSPACE/addons/sourcemod/extensions
           echo "SOURCEMOD_PATH=$SOURCEMOD_PATH" >> $GITHUB_ENV
           echo "SCRIPTING_PATH=$SCRIPTING_PATH" >> $GITHUB_ENV
-          echo "INCLUDE_PATH=$SOURCEMOD_PATH/scripting/include" >> $GITHUB_ENV
+          echo "INCLUDE_PATH=$SCRIPTING_PATH/include" >> $GITHUB_ENV
           echo "GAMEDATA_PATH=$GAMEDATA_PATH" >> $GITHUB_ENV
           echo "EXT_PATH=$EXT_PATH" >> $GITHUB_ENV
           echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
