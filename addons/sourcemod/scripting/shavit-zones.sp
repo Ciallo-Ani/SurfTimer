@@ -4138,12 +4138,18 @@ public Action Shavit_OnUserCmdPre(int client, int &buttons, int &impulse, float 
 				{
 					origin[2] += gCV_Height.FloatValue;
 
-					if (origin[0] != gA_EditCache[client].fCorner1[0] && origin[1] != gA_EditCache[client].fCorner1[1] && !InStartOrEndZone(gA_EditCache[client].fCorner1, origin, gA_EditCache[client].iTrack, gA_EditCache[client].iType))
+					if (origin[0] != gA_EditCache[client].fCorner1[0] && 
+						origin[1] != gA_EditCache[client].fCorner1[1] && 
+						!InStartOrEndZone(gA_EditCache[client].fCorner1, origin, gA_EditCache[client].iTrack, gA_EditCache[client].iType))
 					{
 						gA_EditCache[client].fCorner2 = origin;
 						gI_MapStep[client]++;
 
 						CreateEditMenu(client, true);
+					}
+					else
+					{
+						Shavit_PrintToChat(client, "失败了！");
 					}
 				}
 			}
@@ -4967,6 +4973,8 @@ public Action Shavit_OnStart(int client, int track)
 	{
 		ResetClientTargetNameAndClassName(client, track);
 	}
+
+	return Plugin_Continue;
 }
 
 public void Shavit_OnRestart(int client, int track)

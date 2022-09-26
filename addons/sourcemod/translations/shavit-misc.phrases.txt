@@ -370,8 +370,8 @@
 	"FailedToNoclip"
 	{
 		"#format"	"{1:s},{2:s}"
-		"en"		"You {1}can't{2} noclip when moving, crouching or in the air."
-		"chi"		"移动时, 蹲下时或空中{1}无法{2}启用穿墙."
+		"en"		"You {1}can't{2} noclip now."
+		"chi"		"{1}无法{2}启用穿墙."
 	}
 	"NoclipResumeTimer"
 	{

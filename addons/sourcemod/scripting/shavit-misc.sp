@@ -570,7 +570,7 @@ public Action HookTrigger(int entity, int other)
 {
 	if(IsValidClient(other))
 	{
-		if(Shavit_IsPaused(other) || ((Shavit_GetClientTime(other) <= 0.1) && !Shavit_IsPracticeMode(other)))
+		if(Shavit_IsPaused(other))
 		{
 			return Plugin_Handled;
 		}

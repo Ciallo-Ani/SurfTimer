@@ -37,6 +37,7 @@
 #include <shavit/wr>
 #include <shavit/zones>
 #include <DynamicChannels>
+#include <adminsettings>
 
 #undef REQUIRE_EXTENSIONS
 #include <cstrike>
@@ -71,6 +72,7 @@ bool gB_ReplayPlayback = false;
 bool gB_Zones = false;
 bool gB_Sounds = false;
 bool gB_DynamicChannels = false;
+bool gB_AdminSettings = false;
 
 // cache
 int gI_Cycle = 0;
@@ -114,10 +116,6 @@ Convar gCV_DefaultHUD2 = null;
 // timer settings
 stylestrings_t gS_StyleStrings[STYLE_LIMIT];
 chatstrings_t gS_ChatStrings;
-
-// 管理员隐身
-bool gB_LastShouldHide[MAXPLAYERS+1];
-bool gB_ChangeToSpec[MAXPLAYERS+1];
 
 // 饼饼的傻逼rtv
 bool gB_ShouldDraw[MAXPLAYERS+1];
@@ -165,8 +163,6 @@ public void OnPluginStart()
 	gI_HintText = GetUserMessageId("HintText");
 	gI_TextMsg = GetUserMessageId("TextMsg");
 
-	HookEvent("player_team", Player_Team_Post, EventHookMode_PostNoCopy);
-
 	if(gEV_Type == Engine_TF2)
 	{
 		HookEvent("player_changeclass", Player_ChangeClass);
@@ -182,6 +178,7 @@ public void OnPluginStart()
 	gB_Zones = LibraryExists("shavit-zones");
 	gB_Sounds = LibraryExists("shavit-sounds");
 	gB_DynamicChannels = LibraryExists("DynamicChannels");
+	gB_AdminSettings = LibraryExists("adminsettings");
 
 	// HUD handle
 	gH_HUDTopleft = CreateHudSynchronizer();
@@ -319,6 +316,10 @@ public void OnLibraryAdded(const char[] name)
 	{
 		gB_DynamicChannels = true;
 	}
+	else if(StrEqual(name, "adminsettings"))
+	{
+		gB_AdminSettings = true;
+	}
 }
 
 public void OnLibraryRemoved(const char[] name)
@@ -338,6 +339,10 @@ public void OnLibraryRemoved(const char[] name)
 	else if(StrEqual(name, "DynamicChannels"))
 	{
 		gB_DynamicChannels = false;
+	}
+	else if(StrEqual(name, "adminsettings"))
+	{
+		gB_AdminSettings = false;
 	}
 }
 
@@ -382,33 +387,6 @@ public Action Shavit_OnUserCmdPre(int client, int &buttons, int &impulse, float 
 	}
 
 	return Plugin_Continue;
-}
-
-public void OnPlayerRunCmdPost(int client)
-{
-	if(IsValidClient(client) && IsPlayerAdmin(client))
-	{
-		bool bNowShouldHide = view_as<bool>(gI_HUDSettings[client] & HUD_HIDEADMIN);
-
-		if(!gB_LastShouldHide[client] && bNowShouldHide) // 不隐藏 -> 隐藏
-		{
-			if(GetClientTeam(client) == CS_TEAM_SPECTATOR)
-			{
-				Shavit_PrintToChat(client, "您已隐身");
-				ChangeClientTeam(client, CS_TEAM_NONE);
-			}
-		}
-		else if(gB_LastShouldHide[client] && !bNowShouldHide) // 隐藏 -> 不隐藏
-		{
-			if(gB_ChangeToSpec[client])
-			{
-				Shavit_PrintToChat(client, "您已取消了隐身");
-				ChangeClientTeam(client, CS_TEAM_SPECTATOR);
-			}
-		}
-
-		gB_LastShouldHide[client] = bNowShouldHide;
-	}
 }
 
 public void Shavit_OnChatConfigLoaded()
@@ -529,43 +507,6 @@ public void Player_ChangeClass(Event event, const char[] name, bool dontBroadcas
 public void Teamplay_Round_Start(Event event, const char[] name, bool dontBroadcast)
 {
 	CreateTimer(0.5, Timer_FillerHintTextAll, 0, TIMER_FLAG_NO_MAPCHANGE);
-}
-
-public void Player_Team_Post(Event e, const char[] name, bool b)
-{
-	int client = GetClientOfUserId(e.GetInt("userid"));
-
-	if(IsPlayerAdmin(client))
-	{
-		int team = e.GetInt("team");
-
-		switch(team)
-		{
-			case CS_TEAM_CT, CS_TEAM_T:
-			{
-				gB_ChangeToSpec[client] = false;
-			}
-
-			case CS_TEAM_SPECTATOR:
-			{
-				gB_ChangeToSpec[client] = true;
-
-				if((gI_HUDSettings[client] & HUD_HIDEADMIN))
-				{
-					RequestFrame(Frame_ChangeClientTeam, GetClientSerial(client));
-				}
-			}
-		}
-	}
-}
-
-public void Frame_ChangeClientTeam(any data)
-{
-	int client = GetClientFromSerial(data);
-
-	Shavit_PrintToChat(client, "您已隐身");
-
-	ChangeClientTeam(client, CS_TEAM_NONE);
 }
 
 public Action Hook_HintText(UserMsg msg_id, BfRead msg, const int[] players, int playersNum, bool reliable, bool init)
@@ -810,13 +751,6 @@ Action ShowHUDMenu(int client, int item)
 	{
 		FormatEx(sInfo, 16, "!%d", HUD_DEBUGTARGETNAME);
 		FormatEx(sHudItem, 64, "%T", "HudDebugTargetname", client);
-		menu.AddItem(sInfo, sHudItem);
-	}
-
-	if(IsPlayerAdmin(client))
-	{
-		FormatEx(sInfo, 16, "!%d", HUD_HIDEADMIN);
-		FormatEx(sHudItem, 64, "观察者隐身(管理员专属)");
 		menu.AddItem(sInfo, sHudItem);
 	}
 
@@ -2196,7 +2130,7 @@ void UpdateSpectatorList(int client, Panel panel, bool &draw)
 			continue;
 		}
 
-		if((gCV_SpectatorList.IntValue == 1 && (IsPlayerAdmin(i)) && (gI_HUDSettings[i] & HUD_HIDEADMIN)) ||
+		if((gCV_SpectatorList.IntValue == 1 && IsPlayerAdmin(i) && gB_AdminSettings && (Admin_GetSettings(i) & SETTING_HIDE)) ||
 			(gCV_SpectatorList.IntValue == 2 && !CanUserTarget(client, i)))
 		{
 			continue;
@@ -2625,5 +2559,5 @@ public void RTV_OnLaunchFinished()
 
 stock bool IsPlayerAdmin(int client)
 {
-	return CheckCommandAccess(client, "sm_ban", ADMFLAG_BAN, false);
+	return GetUserFlagBits(client) != 0;
 }
