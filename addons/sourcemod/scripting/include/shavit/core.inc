@@ -24,7 +24,7 @@
 #endif
 #define _shavit_core_included
 
-#define SHAVIT_VERSION "3.3.0"
+#define SHAVIT_VERSION "3.3.2"
 #define STYLE_LIMIT 256
 
 // god i fucking hate sourcemod. NULL_VECTOR isn't const so it's not guaranteed to be 0,0,0
@@ -118,7 +118,7 @@ enum struct timer_snapshot_t
 	int iTotalMeasures;
 	int iGoodGains;
 	float fServerTime;
-	int iSHSWCombination;
+	int iKeyCombo;
 	int iTimerTrack;
 	int iMeasuredJumps;
 	int iPerfectJumps;
@@ -329,7 +329,7 @@ stock void GetTimerSQLPrefix(char[] buffer, int maxlen)
 
 stock bool IsValidClient(int client, bool bAlive = false)
 {
-	return (client >= 1 && client <= MaxClients && IsClientConnected(client) && IsClientInGame(client) && !IsClientSourceTV(client) && (!bAlive || IsPlayerAlive(client)));
+	return (client >= 1 && client <= MaxClients && IsClientInGame(client) && !IsClientSourceTV(client) && (!bAlive || IsPlayerAlive(client)));
 }
 
 stock bool IsSource2013(EngineVersion ev)
@@ -792,26 +792,6 @@ forward void Shavit_OnChatConfigLoaded();
 forward void Shavit_OnWorstRecord(int client, int style, float time, int jumps, int strafes, float sync, int track, float oldtime, float perfs, float avgvel, float maxvel, int timestamp);
 
 /**
- * Called before clan tag variables are processed.
- *
- * @param client					Client index.
- * @param clantag					Reference to the clan tag buffer.
- * @param clantaglength				Max length of the customtag buffer.
- * @return							Plugin_Handled or Plugin_Stop to block the clan tag from changing. Anything else to pass along new values.
- */
-forward Action Shavit_OnClanTagChangePre(int client, char[] clantag, int clantaglength);
-
-/**
- * Called after clan tags are changed.
- *
- * @param client					Client index.
- * @param customtag					Reference to the custom clan tag buffer.
- * @param customtaglength			Max length of the customtag buffer.
- * @noreturn
- */
-forward void Shavit_OnClanTagChangePost(int client, char[] customtag, int customtaglength);
-
-/**
  * Called when a time offset is calculated
  *
  * @param client					Client index.
@@ -1017,7 +997,7 @@ native void Shavit_ResumeTimer(int client, bool teleport = false);
  * Gets a players zone offset.
  *
  * @param client					Client index.
- * @param teleport					Zone type (Zone_Start or Zone_End).
+ * @param zonetype					Zone type (Zone_Start or Zone_End).
  * @return							Zone offset fraction if any for the given zone type.
  */
 native float Shavit_GetZoneOffset(int client, int zonetype);
@@ -1026,8 +1006,8 @@ native float Shavit_GetZoneOffset(int client, int zonetype);
  * Gets distance of a players distance offset given a zone.
  *
  * @param client					Client index.
- * @param teleport					Zone type  (Zone_Start or Zone_End).
- * @return 							Distance offset if any for the given zone type/
+ * @param zonetype					Zone type  (Zone_Start or Zone_End).
+ * @return 							Distance offset if any for the given zone type
  */
 native float Shavit_GetDistanceOffset(int client, int zonetype);
 
@@ -1329,7 +1309,7 @@ native float Shavit_GetMaxVelocity(int client);
 native void Shavit_SetAvgVelocity(int client, float vel);
 
 /**
- * Gets the max velocity of a player.
+ * Sets the max velocity a player has reached in a run. (timer_snapshot_t.fMaxVelocity)
  *
  * @param client					Client index
  * @param vel						Max velocity

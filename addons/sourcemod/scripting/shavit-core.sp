@@ -521,36 +521,15 @@ void LoadDHooks()
 	delete CreateInterface;
 	delete gamedataConf;
 
-	GameData AcceptInputGameData;
+	gamedataConf = LoadGameConfigFile("sdktools.games");
 
-	if (gEV_Type == Engine_CSS)
-	{
-		AcceptInputGameData = new GameData("sdktools.games/game.cstrike");
-	}
-	else if (gEV_Type == Engine_TF2)
-	{
-		AcceptInputGameData = new GameData("sdktools.games/game.tf");
-	}
-	else if (gEV_Type == Engine_CSGO)
-	{
-		AcceptInputGameData = new GameData("sdktools.games/engine.csgo");
-	}
-
-	// Stolen from dhooks-test.sp
-	offset = AcceptInputGameData.GetOffset("AcceptInput");
-	delete AcceptInputGameData;
+	offset = GameConfGetOffset(gamedataConf, "AcceptInput");
 	gH_AcceptInput = new DynamicHook(offset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
 	gH_AcceptInput.AddParam(HookParamType_CharPtr);
 	gH_AcceptInput.AddParam(HookParamType_CBaseEntity);
 	gH_AcceptInput.AddParam(HookParamType_CBaseEntity);
 	gH_AcceptInput.AddParam(HookParamType_Object, 20, DHookPass_ByVal|DHookPass_ODTOR|DHookPass_OCTOR|DHookPass_OASSIGNOP); //variant_t is a union of 12 (float[3]) plus two int type params 12 + 8 = 20
 	gH_AcceptInput.AddParam(HookParamType_Int);
-
-	gamedataConf = LoadGameConfigFile("sdktools.games");
-	if (gamedataConf == null)
-	{
-		SetFailState("Failed to load sdktools gamedata");
-	}
 
 	offset = GameConfGetOffset(gamedataConf, "Teleport");
 	if (offset == -1)
@@ -1646,8 +1625,9 @@ void VelocityChanges(int data)
 	}
 #endif
 
-	float fAbsVelocity[3];
+	float fAbsVelocity[3], fAbsOrig[3];
 	GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", fAbsVelocity);
+	fAbsOrig = fAbsVelocity;
 
 	float fSpeed = (SquareRoot(Pow(fAbsVelocity[0], 2.0) + Pow(fAbsVelocity[1], 2.0)));
 
@@ -1691,6 +1671,31 @@ void VelocityChanges(int data)
 		fAbsVelocity[2] += fJumpBonus;
 	}
 
+	float fSpeedLimit = GetStyleSettingFloat(gA_Timers[client].bsStyle, "velocity_limit");
+
+	if (fSpeedLimit > 0.0)
+	{
+		if (gB_Zones && Shavit_InsideZone(client, Zone_CustomSpeedLimit, -1))
+		{
+			fSpeedLimit = gF_ZoneSpeedLimit[client];
+		}
+
+		float fSpeed_New = (SquareRoot(Pow(fAbsVelocity[0], 2.0) + Pow(fAbsVelocity[1], 2.0)));
+
+		if (fSpeedLimit != 0.0 && fSpeed_New > 0.0)
+		{
+			float fScale = fSpeedLimit / fSpeed_New;
+
+			if (fScale < 1.0)
+			{
+				fAbsVelocity[0] *= fScale;
+				fAbsVelocity[1] *= fScale;
+			}
+		}
+	}
+
+	if (fAbsOrig[0] == fAbsVelocity[0] && fAbsOrig[1] == fAbsVelocity[1] && fAbsOrig[2] == fAbsVelocity[2])
+		return;
 
 	if(!gCV_VelocityTeleport.BoolValue)
 	{
@@ -2454,7 +2459,7 @@ void StartTimer(int client, int track)
 
 			gA_Timers[client].iTimerTrack = track;
 			gA_Timers[client].bTimerEnabled = true;
-			gA_Timers[client].iSHSWCombination = -1;
+			gA_Timers[client].iKeyCombo = -1;
 			gA_Timers[client].fCurrentTime = 0.0;
 			gA_Timers[client].bPracticeMode = false;
 			gA_Timers[client].iMeasuredJumps = 0;
@@ -2597,7 +2602,7 @@ public void OnClientPutInServer(int client)
 	gB_Auto[client] = true;
 	gA_Timers[client].fStrafeWarning = 0.0;
 	gA_Timers[client].bPracticeMode = false;
-	gA_Timers[client].iSHSWCombination = -1;
+	gA_Timers[client].iKeyCombo = -1;
 	gA_Timers[client].iTimerTrack = 0;
 	gA_Timers[client].bsStyle = 0;
 	gA_Timers[client].fTimescale = 1.0;
@@ -2627,13 +2632,14 @@ public void OnClientPutInServer(int client)
 
 	SDKHook(client, SDKHook_PreThinkPost, PreThinkPost);
 	SDKHook(client, SDKHook_PostThinkPost, PostThinkPost);
+}
 
+public void OnClientAuthorized(int client, const char[] auth)
+{
 	int iSteamID = GetSteamAccountID(client);
 
 	if(iSteamID == 0)
 	{
-		KickClient(client, "%T", "VerificationFailed", client);
-
 		return;
 	}
 
@@ -2664,17 +2670,11 @@ public void OnClientPutInServer(int client)
 			"INSERT INTO %susers (auth, name, ip, lastlogin) VALUES (%d, '%s', %d, %d) ON DUPLICATE KEY UPDATE name = '%s', ip = %d, lastlogin = %d;",
 			gS_MySQLPrefix, iSteamID, sEscapedName, iIPAddress, iTime, sEscapedName, iIPAddress, iTime);
 	}
-	else if (gI_Driver == Driver_pgsql)
+	else // postgresql & sqlite
 	{
 		FormatEx(sQuery, 512,
 			"INSERT INTO %susers (auth, name, ip, lastlogin) VALUES (%d, '%s', %d, %d) ON CONFLICT(auth) DO UPDATE SET name = '%s', ip = %d, lastlogin = %d;",
 			gS_MySQLPrefix, iSteamID, sEscapedName, iIPAddress, iTime, sEscapedName, iIPAddress, iTime);
-	}
-	else
-	{
-		FormatEx(sQuery, 512,
-			"REPLACE INTO %susers (auth, name, ip, lastlogin) VALUES (%d, '%s', %d, %d);",
-			gS_MySQLPrefix, iSteamID, sEscapedName, iIPAddress, iTime);
 	}
 
 	QueryLog(gH_SQL, SQL_InsertUser_Callback, sQuery, GetClientSerial(client));
@@ -3290,6 +3290,36 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 				buttons &= ~IN_MOVERIGHT;
 			}
 
+			if (GetStyleSettingBool(gA_Timers[client].bsStyle, "a_or_d_only"))
+			{
+				int iCombination = -1;
+				bool bMoveLeft = ((buttons & IN_MOVELEFT) > 0 && vel[1] < 0.0);
+				bool bMoveRight = ((buttons & IN_MOVERIGHT) > 0 && vel[1] > 0.0);
+
+				if (bMoveLeft)
+				{
+					iCombination = 0;
+				}
+				else if (bMoveRight)
+				{
+					iCombination = 1;
+				}
+
+				if (iCombination != -1)
+				{
+					if (gA_Timers[client].iKeyCombo == -1)
+					{
+						gA_Timers[client].iKeyCombo = iCombination;
+					}
+
+					if (iCombination != gA_Timers[client].iKeyCombo)
+					{
+						vel[1] = 0.0;
+						buttons &= ~(IN_MOVELEFT|IN_MOVERIGHT);
+					}
+				}
+			}
+
 			// HSW
 			// Theory about blocking non-HSW strafes while playing HSW:
 			// Block S and W without A or D.
@@ -3316,18 +3346,18 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 					}
 
 					// int gI_SHSW_FirstCombination[MAXPLAYERS+1]; // 0 - W/A S/D | 1 - W/D S/A
-					if(gA_Timers[client].iSHSWCombination == -1 && iCombination != -1)
+					if(gA_Timers[client].iKeyCombo == -1 && iCombination != -1)
 					{
 						Shavit_PrintToChat(client, "%T", (iCombination == 0)? "SHSWCombination0":"SHSWCombination1", client, gS_ChatStrings.sVariable, gS_ChatStrings.sText);
-						gA_Timers[client].iSHSWCombination = iCombination;
+						gA_Timers[client].iKeyCombo = iCombination;
 					}
 
 					// W/A S/D
-					if((gA_Timers[client].iSHSWCombination == 0 && iCombination != 0) ||
+					if((gA_Timers[client].iKeyCombo == 0 && iCombination != 0) ||
 					// W/D S/A
-						(gA_Timers[client].iSHSWCombination == 1 && iCombination != 1) ||
+						(gA_Timers[client].iKeyCombo == 1 && iCombination != 1) ||
 					// no valid combination & no valid input
-						(gA_Timers[client].iSHSWCombination == -1 && iCombination == -1))
+						(gA_Timers[client].iKeyCombo == -1 && iCombination == -1))
 					{
 						vel[0] = 0.0;
 						vel[1] = 0.0;
@@ -3429,6 +3459,14 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 		buttons &= ~IN_JUMP;
 	}
 
+	// This can be bypassed by spamming +duck on CSS which causes `iGroundEntity` to be `-1` here...
+	//   (e.g. an autobhop + velocity_limit style...)
+	// m_hGroundEntity changes from 0 -> -1 same tick which causes problems and I'm not sure what the best way / place to handle that is...
+	// There's not really many things using m_hGroundEntity that "matter" in this function
+	// so I'm just going to move this `velocity_limit` logic somewhere else instead of trying to "fix" it.
+	// Now happens in `VelocityChanges()` which comes from `player_jump->RequestFrame(VelocityChanges)`.
+	//   (that is also the same thing btimes does)
+#if 0
 	// velocity limit
 	if (iGroundEntity != -1 && GetStyleSettingFloat(gA_Timers[client].bsStyle, "velocity_limit") > 0.0)
 	{
@@ -3450,11 +3488,13 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 
 			if(fScale < 1.0)
 			{
-				ScaleVector(fSpeed, fScale);
+				fSpeed[0] *= fScale;
+				fSpeed[1] *= fScale;
 				TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, fSpeed); // maybe change this to SetEntPropVector some time?
 			}
 		}
 	}
+#endif
 
 	gA_Timers[client].bJumped = false;
 	gA_Timers[client].bOnGround = bOnGround;
@@ -3474,7 +3514,10 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
 		return;
 	}
 
-	if (GetStyleSettingBool(gA_Timers[client].bsStyle, "strafe_count_w")
+	int iGroundEntity = GetEntPropEnt(client, Prop_Send, "m_hGroundEntity");
+
+	if (iGroundEntity == -1
+	&& GetStyleSettingBool(gA_Timers[client].bsStyle, "strafe_count_w")
 	&& !GetStyleSettingBool(gA_Timers[client].bsStyle, "block_w")
 	&& (gA_Timers[client].fLastInputVel[0] <= 0.0) && (vel[0] > 0.0)
 	&& GetStyleSettingInt(gA_Timers[client].bsStyle, "force_hsw") != 1
@@ -3483,7 +3526,8 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
 		gA_Timers[client].iStrafes++;
 	}
 
-	if (GetStyleSettingBool(gA_Timers[client].bsStyle, "strafe_count_s")
+	if (iGroundEntity == -1
+	&& GetStyleSettingBool(gA_Timers[client].bsStyle, "strafe_count_s")
 	&& !GetStyleSettingBool(gA_Timers[client].bsStyle, "block_s")
 	&& (gA_Timers[client].fLastInputVel[0] >= 0.0) && (vel[0] < 0.0)
 	)
@@ -3491,7 +3535,8 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
 		gA_Timers[client].iStrafes++;
 	}
 
-	if (GetStyleSettingBool(gA_Timers[client].bsStyle, "strafe_count_a")
+	if (iGroundEntity == -1
+	&& GetStyleSettingBool(gA_Timers[client].bsStyle, "strafe_count_a")
 	&& !GetStyleSettingBool(gA_Timers[client].bsStyle, "block_a")
 	&& (gA_Timers[client].fLastInputVel[1] >= 0.0) && (vel[1] < 0.0)
 	&& (GetStyleSettingInt(gA_Timers[client].bsStyle, "force_hsw") > 0 || vel[0] == 0.0)
@@ -3500,7 +3545,8 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
 		gA_Timers[client].iStrafes++;
 	}
 
-	if (GetStyleSettingBool(gA_Timers[client].bsStyle, "strafe_count_d")
+	if (iGroundEntity == -1
+	&& GetStyleSettingBool(gA_Timers[client].bsStyle, "strafe_count_d")
 	&& !GetStyleSettingBool(gA_Timers[client].bsStyle, "block_d")
 	&& (gA_Timers[client].fLastInputVel[1] <= 0.0) && (vel[1] > 0.0)
 	&& (GetStyleSettingInt(gA_Timers[client].bsStyle, "force_hsw") > 0 || vel[0] == 0.0)
@@ -3508,8 +3554,6 @@ public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float
 	{
 		gA_Timers[client].iStrafes++;
 	}
-
-	int iGroundEntity = GetEntPropEnt(client, Prop_Send, "m_hGroundEntity");
 
 	float fAngle = GetAngleDiff(angles[1], gA_Timers[client].fLastAngle);
 

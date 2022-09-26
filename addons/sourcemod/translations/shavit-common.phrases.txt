@@ -59,6 +59,11 @@
 		"en"		"{1} seconds remaining."
 		"chi"		"剩余 {1} 秒."
 	}
+	"Extended"
+	{
+		"#format" "{1:s},{2:N},{3:s},{4:s},{5:d},{6:s}"
+		"en"  	"{1}{2}{3} extended the map by {4}{5}{6} minutes."
+	}
 	// ----------- Random ----------- //
 	"TimerLoading"
 	{

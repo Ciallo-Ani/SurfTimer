@@ -41,6 +41,10 @@
 		"en"		"Start position has been {1}deleted{2}."
 		"chi"		"自定义起始区域已{1}删除{2}."
 	}
+	"DeleteSetStartMenuTitle"
+	{
+		"en"        "Start position to delete"
+	}
 	// ---------- ZoneHook ---------- //
 	"ZoneHook_Crosshair"
 	{
@@ -192,8 +196,8 @@
 	}
 	"ZoneAxis"
 	{
-		"en"		"axis"
-		"chi"		"轴"
+		"en"		"Change Axis"
+		"chi"		"更改轴"
 	}
 	"ZoneCustomSpawnSuccess"
 	{

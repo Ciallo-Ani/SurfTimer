@@ -86,6 +86,7 @@ char gS_ForcedCvars[][][] =
 };
 
 bool gB_Hide[MAXPLAYERS+1];
+bool gB_AutoRestart[MAXPLAYERS+1];
 bool gB_Late = false;
 int gI_GroundEntity[MAXPLAYERS+1];
 int gI_LastShot[MAXPLAYERS+1];
@@ -100,6 +101,7 @@ int gI_LastStopInfo[MAXPLAYERS+1];
 
 // cookies
 Handle gH_HideCookie = null;
+Handle gH_AutoRestartCookie = null;
 Cookie gH_BlockAdvertsCookie = null;
 
 // cvars
@@ -144,6 +146,7 @@ ConVar mp_humanteam = null;
 ConVar hostname = null;
 ConVar hostport = null;
 ConVar sv_disable_radar = null;
+ConVar tf_dropped_weapon_lifetime = null;
 
 // forwards
 Handle gH_Forwards_OnClanTagChangePre = null;
@@ -233,6 +236,12 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_practice", Command_Noclip, "Toggles noclip. (sm_nc alias)");
 	RegConsoleCmd("sm_nc", Command_Noclip, "Toggles noclip.");
 	RegConsoleCmd("sm_noclipme", Command_Noclip, "Toggles noclip. (sm_nc alias)");
+	
+	// qol
+	RegConsoleCmd("sm_autorestart", Command_AutoRestart, "Toggles auto-restart.");
+	RegConsoleCmd("sm_autoreset", Command_AutoRestart, "Toggles auto-restart.");
+	gH_AutoRestartCookie = RegClientCookie("shavit_autorestart", "Auto-restart settings", CookieAccess_Protected);
+
 	AddCommandListener(CommandListener_Noclip, "+noclip");
 	AddCommandListener(CommandListener_Noclip, "-noclip");
 	// Hijack sourcemod's sm_noclip from funcommands to work when no args are specified.
@@ -319,10 +328,12 @@ public void OnPluginStart()
 	}
 
 	gCV_HideRadar.AddChangeHook(OnConVarChanged);
+	gCV_NoWeaponDrops.AddChangeHook(OnConVarChanged);
 	Convar.AutoExecConfig();
 
 	mp_humanteam = FindConVar((gEV_Type == Engine_TF2) ? "mp_humans_must_join_team" : "mp_humanteam");
 	sv_disable_radar = FindConVar("sv_disable_radar");
+	tf_dropped_weapon_lifetime = FindConVar("tf_dropped_weapon_lifetime");
 
 	// crons
 	CreateTimer(10.0, Timer_Cron, 0, TIMER_REPEAT);
@@ -403,9 +414,20 @@ void LoadDHooks()
 
 public void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-	if (sv_disable_radar != null)
+	if (convar == gCV_HideRadar && sv_disable_radar != null)
 	{
 		sv_disable_radar.BoolValue = gCV_HideRadar.BoolValue;
+	}
+	else if (gEV_Type == Engine_TF2 && convar == gCV_NoWeaponDrops)
+	{
+		if (convar.BoolValue)
+		{
+			tf_dropped_weapon_lifetime.IntValue = 0;
+			TF2_KillDroppedWeapons();
+		} else
+		{
+			tf_dropped_weapon_lifetime.IntValue = 30; // default value
+		}
 	}
 }
 
@@ -443,17 +465,10 @@ public void OnClientCookiesCached(int client)
 	}
 
 	char sSetting[8];
-	GetClientCookie(client, gH_HideCookie, sSetting, 8);
-
-	if(strlen(sSetting) == 0)
-	{
-		SetClientCookie(client, gH_HideCookie, "0");
-		gB_Hide[client] = false;
-	}
-	else
-	{
-		gB_Hide[client] = view_as<bool>(StringToInt(sSetting));
-	}
+	GetClientCookie(client, gH_HideCookie, sSetting, sizeof(sSetting));
+	gB_Hide[client] = StringToInt(sSetting) != 0;
+	GetClientCookie(client, gH_AutoRestartCookie, sSetting, sizeof(sSetting));
+	gB_AutoRestart[client] = StringToInt(sSetting) != 0;
 
 	gI_Style[client] = Shavit_GetBhopStyle(client);
 }
@@ -594,6 +609,11 @@ public void OnConfigsExecuted()
 	if (sv_disable_radar != null && gCV_HideRadar.BoolValue)
 	{
 		sv_disable_radar.BoolValue = true;
+	}
+
+	if (tf_dropped_weapon_lifetime != null && gCV_NoWeaponDrops.BoolValue)
+	{
+		tf_dropped_weapon_lifetime.IntValue = 0;
 	}
 
 	if(gCV_CreateSpawnPoints.IntValue > 0)
@@ -1048,7 +1068,7 @@ public Action Timer_Cron(Handle timer)
 			float ang[3], newang[3];
 			GetEntPropVector(ent, Prop_Send, "m_angRotation", ang);
 			newang[0] = normalize_ang(ang[0]);
-			newang[2] = normalize_ang(ang[1]);
+			newang[1] = normalize_ang(ang[1]);
 			newang[2] = normalize_ang(ang[2]);
 
 			if (newang[0] != ang[0] || newang[1] != ang[1] || newang[2] != ang[2])
@@ -1271,6 +1291,16 @@ void RemoveRagdoll(int client)
 	}
 }
 
+void TF2_KillDroppedWeapons()
+{
+	int ent = -1;
+
+	while ((ent = FindEntityByClassname(ent, "tf_dropped_weapon")) != -1)
+	{
+		AcceptEntityInput(ent, "Kill");
+	}
+}
+
 public void Shavit_OnPause(int client, int track)
 {
 	if (gB_Eventqueuefix)
@@ -1347,6 +1377,19 @@ public Action Shavit_OnUserCmdPre(int client, int &buttons, int &impulse, float 
 			{
 				SetEntityMoveType(client, MOVETYPE_ISOMETRIC);
 			}
+		}
+	}
+
+	if (gB_AutoRestart[client])
+	{
+		float bestTime = Shavit_GetClientPB(client, style, track);
+		float current = Shavit_GetClientTime(client);
+
+		if (bestTime != 0 && current > bestTime)
+		{
+			Shavit_RestartTimer(client, track);
+			Shavit_PrintToChat(client, "%T", "AutoRestartTriggered1", client, gS_ChatStrings.sVariable, gS_ChatStrings.sText);
+			Shavit_PrintToChat(client, "%T", "AutoRestartTriggered2", client, gS_ChatStrings.sVariable, gS_ChatStrings.sText);
 		}
 	}
 
@@ -1444,8 +1487,11 @@ public Action Shavit_OnUserCmdPre(int client, int &buttons, int &impulse, float 
 public void OnClientPutInServer(int client)
 {
 	SDKHook(client, SDKHook_SetTransmit, OnSetTransmit);
-	SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
 	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
+	if(gEV_Type != Engine_TF2)
+	{
+		SDKHook(client, SDKHook_WeaponDrop, OnWeaponDrop);
+	}
 
 	gI_LastWeaponTick[client] = 0;
 	gI_LastNoclipTick[client] = 0;
@@ -1648,7 +1694,21 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 		}
 	}
 
+	if (StrEqual(sArgs, "1r") || StrEqual(sArgs, "1b"))
+	{
+		if (gCV_HideChatCommands.BoolValue)
+			return Plugin_Handled; // block chat but still do _Post
+	}
+
 	return Plugin_Continue;
+}
+
+public void OnClientSayCommand_Post(int client, const char[] command, const char[] sArgs)
+{
+	if (StrEqual(sArgs, "1r") || StrEqual(sArgs, "1b"))
+	{
+		FakeClientCommandEx(client, "sm_%c", sArgs[1]);
+	}
 }
 
 public Action Command_Hide(int client, int args)
@@ -2893,6 +2953,15 @@ public Action Command_Drop(int client, const char[] command, int argc)
 	}
 
 	return Plugin_Stop;
+}
+
+public Action Command_AutoRestart(int client, int args)
+{
+	gB_AutoRestart[client] = !gB_AutoRestart[client];
+	SetClientCookie(client, gH_AutoRestartCookie, gB_AutoRestart[client] ? "1" : "0");
+
+	Shavit_PrintToChat(client, "%T", gB_AutoRestart[client] ? "AutoRestartEnabled" : "AutoRestartDisabled", client, gB_AutoRestart[client] ?  gS_ChatStrings.sVariable : gS_ChatStrings.sWarning, gS_ChatStrings.sText);
+	return Plugin_Handled;
 }
 
 public int Native_IsClientUsingHide(Handle plugin, int numParams)
