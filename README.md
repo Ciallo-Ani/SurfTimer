@@ -1,3 +1,5 @@
+# (已经一年没更新了，也懒得更了，使用该仓库后果自负）
+# (It's been a year i haven't updated, use it at your risk!)
 # 非常感谢你看到了我写的插件
 
 我希望用这个插件去替代大多数社区都在用的滑翔插件[SurfTimer](https://github.com/surftimer/Surftimer-Official)
@@ -39,8 +41,4 @@
 在[wiki](https://github.com/shavitush/bhoptimer/wiki)第二个类别的页面下包含了详细的配置信息。
 
 配置文件在 `cfg/sourcemod/plugin.shavit-*.cfg` 和 `addons/sourcemod/configs/shavit-*`.
-
-
-
-# 不懂就亲自 **出钱** [QQ找我](https://wpa.qq.com/msgrd?v=3&uin=1593464801)，我吐了 
 
