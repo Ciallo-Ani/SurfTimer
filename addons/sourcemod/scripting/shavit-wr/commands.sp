@@ -109,7 +109,7 @@ public Action Command_Delete(int client, int args)
 
 	OpenSingleDeleteMenu_Pre(client);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_DeleteAll(int client, int args)
@@ -121,7 +121,7 @@ public Action Command_DeleteAll(int client, int args)
 
 	OpenAllDeleteMenu_Pre(client);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_WorldRecord_Style(int client, int args)
@@ -138,7 +138,7 @@ public Action Command_WorldRecord_Style(int client, int args)
 		Command_WorldRecord(client, args);
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_WorldRecord(int client, int args)
@@ -191,14 +191,14 @@ public Action Command_WorldRecord(int client, int args)
 		if (!GuessBestMapName(gA_ValidMaps, gA_WRCache[client].sClientMap, gA_WRCache[client].sClientMap))
 		{
 			Shavit_PrintToChat(client, "%t", "Map was not found", gA_WRCache[client].sClientMap);
-			return Plugin_Handled;
+			return Plugin_Continue;
 		}
 	}
 
 	gA_WRCache[client].iLastTrack = track;
 
 	RetrieveWRMenu(client, track);
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_BonusWorldRecord(int client, int args)
@@ -230,27 +230,27 @@ public Action Command_BonusWorldRecord(int client, int args)
 		if (!GuessBestMapName(gA_ValidMaps, gA_WRCache[client].sClientMap, gA_WRCache[client].sClientMap))
 		{
 			Shavit_PrintToChat(client, "%t", "Map was not found", gA_WRCache[client].sClientMap);
-			return Plugin_Handled;
+			return Plugin_Continue;
 		}
 	}
 
 	OpenBonusWRMenu(client);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_RecentRecords(int client, int args)
 {
 	if(gA_WRCache[client].bPendingMenu || !IsValidClient(client))
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	OpenRRMenu(client);
 
 	gA_WRCache[client].bPendingMenu = true;
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_Maptops(int client, int args)
@@ -277,11 +277,11 @@ public Action Command_Maptops(int client, int args)
 		if (!GuessBestMapName(gA_ValidMaps, gA_WRCache[client].sClientMap, gA_WRCache[client].sClientMap))
 		{
 			Shavit_PrintToChat(client, "%t", "Map was not found", gA_WRCache[client].sClientMap);
-			return Plugin_Handled;
+			return Plugin_Continue;
 		}
 	}
 
 	OpenMaptopMenu(client);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }

@@ -22,12 +22,12 @@ public Action Command_Checkpoints(int client, int args)
 	{
 		ReplyToCommand(client, "This command may be only performed in-game.");
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	OpenCheckpointsMenu(client);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_Save(int client, int args)
@@ -36,7 +36,7 @@ public Action Command_Save(int client, int args)
 	{
 		ReplyToCommand(client, "This command may be only performed in-game.");
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	bool bSegmenting = CanSegment(client);
@@ -45,7 +45,7 @@ public Action Command_Save(int client, int args)
 	{
 		Shavit_PrintToChat(client, "%T", "FeatureDisabled", client);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	if(SaveCheckpoint(client))
@@ -58,7 +58,7 @@ public Action Command_Save(int client, int args)
 		}
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_Tele(int client, int args)
@@ -67,14 +67,14 @@ public Action Command_Tele(int client, int args)
 	{
 		ReplyToCommand(client, "This command may be only performed in-game.");
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	if(!gCV_Checkpoints.BoolValue)
 	{
 		Shavit_PrintToChat(client, "%T", "FeatureDisabled", client);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	bool usingOther = gB_UsingOtherCheckpoint[client];
@@ -110,7 +110,7 @@ public Action Command_Tele(int client, int args)
 		TeleportToCheckpoint(client, gI_CurrentCheckpoint[client], true);
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_Jointeam(int client, const char[] command, int args)

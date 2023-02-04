@@ -24,6 +24,8 @@
 #include <clientprefs>
 #include <convar_class>
 #include <dhooks>
+#include <cstrike>
+
 #include <shavit>
 #include <shavit/colors>
 #include <shavit/hud>
@@ -45,13 +47,25 @@ public Plugin myinfo =
 	url = "https://github.com/shavitush/bhoptimer"
 }
 
+char gS_HudSettings[][] = 
+{
+	"HudMaster",
+	"HudCenter",
+	"HudZoneHud",
+	"HudObserve",
+	"HudSpectators",
+	"HudKeyOverlay",
+	"HudHideWeapon",
+	"Hud2dVel",
+	"HudHidePlayers",
+	"HudHideSounds",
+};
 
 #define MAX_HINT_SIZE 1024
 
 // modules
 bool gB_Replay = false;
 bool gB_Zones = false;
-bool gB_Sounds = false;
 
 // cache
 int gI_Styles = 0;
@@ -91,6 +105,7 @@ char gS_PreStrafeDiff[MAXPLAYERS+1][64];
 char gS_DiffTime[MAXPLAYERS+1][64];
 char gS_Map[160];
 int gI_BotLastStage[MAXPLAYERS+1];
+bool gB_ShouldDraw[MAXPLAYERS+1];
 
 
 #include "shavit-hud/hud/hint.sp"
@@ -103,6 +118,14 @@ int gI_BotLastStage[MAXPLAYERS+1];
 #include "shavit-hud/menu.sp"
 #include "shavit-hud/messages.sp"
 #include "shavit-hud/stocks.sp"
+
+
+
+// ======[ 饼饼RTV FORWARDS ]======
+
+forward void RTV_OnLaunch();
+forward void RTV_OnLaunchFinished();
+
 
 
 // ======[ PLUGIN EVENTS ]======
@@ -147,7 +170,6 @@ public void OnPluginStart()
 	// prevent errors in case the replay bot isn't loaded
 	gB_Replay = LibraryExists("shavit-replay-playback");
 	gB_Zones = LibraryExists("shavit-zones");
-	gB_Sounds = LibraryExists("shavit-sounds");
 }
 
 public void OnMapStart()
@@ -165,10 +187,6 @@ public void OnLibraryAdded(const char[] name)
 	{
 		gB_Zones = true;
 	}
-	else if(StrEqual(name, "shavit-sounds"))
-	{
-		gB_Sounds = true;
-	}
 }
 
 public void OnLibraryRemoved(const char[] name)
@@ -180,10 +198,6 @@ public void OnLibraryRemoved(const char[] name)
 	else if(StrEqual(name, "shavit-zones"))
 	{
 		gB_Zones = false;
-	}
-	else if(StrEqual(name, "shavit-sounds"))
-	{
-		gB_Sounds = false;
 	}
 }
 
@@ -270,7 +284,7 @@ public void Shavit_OnFinishCheckpoint(int client, int cpnum, int style, float ti
 
 public void Shavit_OnLeaveStage(int client, int stage, int style, float leavespeed, float time, bool stagetimer)
 {
-	Shavit_OnLeaveStage_Message(client, stage, style, leavespeed, stagetimer);
+	//Shavit_OnLeaveStage_Message(client, stage, style, leavespeed, stagetimer);
 }
 
 public void Shavit_OnEnterCheckpoint(int client, int cp, int style, float enterspeed, float time)
@@ -298,11 +312,17 @@ public void Shavit_OnLeaveCheckpointZone_Bot(int bot, int cp, float speed)
 	Shavit_OnLeaveCheckpointZone_Bot_Message(bot, speed);
 }
 
+public void Shavit_OnFinish_Post(int client, int style, float time, int jumps, int strafes, float sync, int rank, int overwrite, int track, float oldtime, float oldwr, float avgvel, float maxvel, int timestamp)
+{
+	Shavit_OnFinish_Post_Message(client, style, time, rank, overwrite, track, oldtime, oldwr);
+}
+
 public void OnClientPutInServer(int client)
 {
 	ResetPrestrafeDiff(client);
+	SDKHook(client, SDKHook_SetTransmit, OnSetTransmit);
 
-	if(IsFakeClient(client))
+	if(!IsFakeClient(client))
 	{
 		SDKHook(client, SDKHook_PostThinkPost, PostThinkPost);
 	}
@@ -332,6 +352,18 @@ public void PostThinkPost(int client)
 			}
 		}
 	}
+}
+
+public Action OnSetTransmit(int entity, int client)
+{
+	if(((gI_HUDSettings[client] & HUD_HIDEPLAYERS) || IsFakeClient(client)) && 
+		client != entity && 
+		(!IsClientObserver(client) || (GetEntProp(client, Prop_Send, "m_iObserverMode") != 6 && GetEntPropEnt(client, Prop_Send, "m_hObserverTarget") != entity)))
+	{
+		return Plugin_Handled;
+	}
+
+	return Plugin_Continue;
 }
 
 public void OnClientCookiesCached(int client)
@@ -366,6 +398,33 @@ void Cron()
 	}
 }
 
+public void RTV_OnLaunch()
+{
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if(!IsValidClient(i))
+		{
+			continue;
+		}
+
+		gB_ShouldDraw[i] = view_as<bool>(gI_HUDSettings[i] & HUD_MASTER);
+		gI_HUDSettings[i] &= ~HUD_MASTER;
+	}
+}
+
+public void RTV_OnLaunchFinished()
+{
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if(!IsValidClient(i) || !gB_ShouldDraw[i])
+		{
+			continue;
+		}
+
+		gI_HUDSettings[i] |= HUD_MASTER;
+	}
+}
+
 
 
 // =====[ PRIVATE] =====
@@ -387,11 +446,8 @@ static void CreateConVars()
 		..."HUD_SPECTATORS			16\n"
 		..."HUD_KEYOVERLAY			32\n"
 		..."HUD_HIDEWEAPON			64\n"
-		..."HUD_TOPLEFT				128\n"
-		..."HUD_SYNC					256\n"
-		..."HUD_TIMELEFT				512\n"
-		..."HUD_2DVEL				1024\n"
-		..."HUD_NOSOUNDS				2048\n");
+		..."HUD_2DVEL				128\n"
+		..."HUD_HIDEPLAYERS				256\n");
 
 	IntToString(HUD_DEFAULT2, defaultHUD, sizeof(defaultHUD));
 	gCV_DefaultHUD2 = new Convar("shavit_hud2_default", defaultHUD, "Default HUD2 settings as a bitflag of what to remove\n"

@@ -3,7 +3,6 @@
 #endif
 #define _dhooks_included
 
-//
 // Needed for the SDKFuncConfSource enum.
 #include <sdktools>
 

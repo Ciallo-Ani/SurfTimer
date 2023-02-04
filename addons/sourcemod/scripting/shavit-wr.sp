@@ -26,7 +26,6 @@
 #include <shavit/wr>
 
 #undef REQUIRE_PLUGIN
-#include <shavit/rankings>
 #include <shavit/stats>
 
 #undef REQUIRE_PLUGIN
@@ -51,7 +50,6 @@ public Plugin myinfo =
 bool gB_Late = false;
 
 // modules
-bool gB_Rankings = false;
 bool gB_Stats = false;
 
 
@@ -137,7 +135,6 @@ public void OnPluginStart()
 	InitCaches();
 
 	// modules
-	gB_Rankings = LibraryExists("shavit-rankings");
 	gB_Stats = LibraryExists("shavit-stats");
 
 	if(gB_Late)
@@ -230,11 +227,7 @@ public void AdminMenu_DeleteAll(Handle topmenu,  TopMenuAction action, TopMenuOb
 
 public void OnLibraryAdded(const char[] name)
 {
-	if(StrEqual(name, "shavit-rankings"))
-	{
-		gB_Rankings = true;
-	}
-	else if(StrEqual(name, "shavit-stats"))
+	if(StrEqual(name, "shavit-stats"))
 	{
 		gB_Stats = true;
 	}
@@ -249,11 +242,7 @@ public void OnLibraryAdded(const char[] name)
 
 public void OnLibraryRemoved(const char[] name)
 {
-	if(StrEqual(name, "shavit-rankings"))
-	{
-		gB_Rankings = false;
-	}
-	else if(StrEqual(name, "shavit-stats"))
+	if(StrEqual(name, "shavit-stats"))
 	{
 		gB_Stats = false;
 	}

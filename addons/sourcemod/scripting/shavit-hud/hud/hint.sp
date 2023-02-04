@@ -35,13 +35,13 @@ static void UpdateMainHUD(int client)
 		{
 			iZoneHUD = ZoneHUD_Start;
 		}
-		else if (Shavit_InsideZone(target, Zone_End, huddata.iTrack))
-		{
-			iZoneHUD = ZoneHUD_End;
-		}
 		else if(Shavit_InsideZone(target, Zone_Stage, huddata.iTrack) && Shavit_IsStageTimer(target))
 		{
 			iZoneHUD = ZoneHUD_Stage;
+		}
+		else if (Shavit_InsideZone(target, Zone_End, huddata.iTrack))
+		{
+			iZoneHUD = ZoneHUD_End;
 		}
 	}
 
@@ -179,7 +179,7 @@ static int AddHUDToBuffer(int client, huddata_t data, char[] buffer, int maxlen)
 
 			if(data.fTime == 0.0)
 			{
-				FormatEx(sTime, 32, "Stopped");
+				FormatEx(sTime, 32, "已停止");
 			}
 			else
 			{
@@ -207,13 +207,13 @@ static int AddHUDToBuffer(int client, huddata_t data, char[] buffer, int maxlen)
 
 			if(data.iStyle == 0)
 			{
-				FormatEx(sLine, 128, "Time: <span color='#%06X'>%s </span>", iColor, sTime);
+				FormatEx(sLine, 128, "%s: <span color='#%06X'>%s </span>", sTransTime, iColor, sTime);
 			}
 			else
 			{
 				char sStyle[32];
 				Shavit_GetStyleStrings(data.iStyle, sStyleName, sStyle, 32);
-				FormatEx(sLine, 128, "Time: <span color='#%06X'>%s </span>[%s] ", iColor, sTime, sStyle);
+				FormatEx(sLine, 128, "%s: <span color='#%06X'>%s </span>[%s] ", sTransTime, iColor, sTime, sStyle);
 			}
 
 			AddHUDLine(buffer, maxlen, sLine, iLines);
@@ -259,14 +259,14 @@ static int AddHUDToBuffer(int client, huddata_t data, char[] buffer, int maxlen)
 
 			if(data.iFinishNum == 0)
 			{
-				FormatEx(sTargetSR, 64, "None");
+				FormatEx(sTargetSR, 64, "无");
 			}
 			else
 			{
 				FormatHUDSeconds(data.fWR, sTargetSR, 64);
 			}
 
-			FormatEx(sLine, 64, "SR: %s", sTargetSR);
+			FormatEx(sLine, 64, "最佳: %s", sTargetSR);
 			AddHUDLine(buffer, maxlen, sLine, iLines);
 		}
 		else
@@ -275,14 +275,14 @@ static int AddHUDToBuffer(int client, huddata_t data, char[] buffer, int maxlen)
 
 			if(data.fPB == 0)
 			{
-				FormatEx(sTargetPB, 64, "None");
+				FormatEx(sTargetPB, 64, "无");
 			}
 			else
 			{
 				FormatHUDSeconds(data.fPB, sTargetPB, 64);
 			}
 
-			FormatEx(sLine, 128, "PB: %s", sTargetPB);
+			FormatEx(sLine, 128, "个人: %s", sTargetPB);
 			AddHUDLine(buffer, maxlen, sLine, iLines);
 		}
 
@@ -296,43 +296,43 @@ static int AddHUDToBuffer(int client, huddata_t data, char[] buffer, int maxlen)
 				{
 					if(bLinearMap)
 					{
-						FormatEx(sLine, 32, " | Linear Map");
+						FormatEx(sLine, 32, " | 竞速图");
 					}
 					else
 					{
-						FormatEx(sLine, 32, " | Stage %d / %d", data.iStage, Shavit_GetMapStages());
+						FormatEx(sLine, 32, " | 关卡 %d / %d", data.iStage, Shavit_GetMapStages());
 					}
 				}
 				else
 				{
-					FormatEx(sLine, 32, " | Bonus %d", data.iTrack);
+					FormatEx(sLine, 32, " | 奖励 %d", data.iTrack);
 				}
 			}
 			case ZoneHUD_Start:
 			{
 				if(data.iTrack == 0)
 				{
-					FormatEx(sLine, 32, " | Map Start");
+					FormatEx(sLine, 32, " | 起点");
 				}
 				else
 				{
-					FormatEx(sLine, 32, " | Bonus %d Start", data.iTrack);
+					FormatEx(sLine, 32, " | 奖励 %d 起点", data.iTrack);
 				}
 			}
 			case ZoneHUD_End:
 			{
 				if(data.iTrack == 0)
 				{
-					FormatEx(sLine, 32, " | Map End");
+					FormatEx(sLine, 32, " | 终点");
 				}
 				else
 				{
-					FormatEx(sLine, 32, " | Bonus %d End", data.iTrack);
+					FormatEx(sLine, 32, " | 奖励 %d 终点", data.iTrack);
 				}
 			}
 			case ZoneHUD_Stage:
 			{
-				FormatEx(sLine, 32, " | Stage %d Start", data.iStage);
+				FormatEx(sLine, 32, " | 关卡 %d 起点", data.iStage);
 			}
 		}
 
@@ -349,7 +349,7 @@ static int AddHUDToBuffer(int client, huddata_t data, char[] buffer, int maxlen)
 				iColor = 0xFF6767;
 			}
 
-			FormatEx(sLine, 128, "Speed: <span color='#%06X'>%d</span>", iColor, data.iSpeed);
+			FormatEx(sLine, 128, "%s: <span color='#%06X'>%d</span>", sSpeed, iColor, data.iSpeed);
 
 			AddHUDLine(buffer, maxlen, sLine, iLines);
 

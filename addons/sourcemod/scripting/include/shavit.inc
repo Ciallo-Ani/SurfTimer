@@ -23,11 +23,13 @@
 #endif
 #define _shavit_included
 
+#include <sdktools>
+
 #define SHAVIT_VERSION "3.0.9a"
 #define TRACK_LIMIT 16
 #define STYLE_LIMIT 16
 #define MAX_ZONES 128
-#define MAX_STAGES 32
+#define MAX_STAGES 70
 #define MAX_CPZONES 16
 
 
@@ -40,11 +42,11 @@
 #define HUD_SPECTATORS			(1 << 4) // show list of spectators
 #define HUD_KEYOVERLAY			(1 << 5) // show a key overlay
 #define HUD_HIDEWEAPON			(1 << 6) // hide the player's weapon
-#define HUD_TOPLEFT				(1 << 7) // show top left white HUD with WR/PB times
-#define HUD_SYNC				(1 << 8) // shows sync at right side of the screen (css only)
-#define HUD_TIMELEFT			(1 << 9) // shows time left at right tside of the screen (css only)
-#define HUD_2DVEL				(1 << 10) // shows 2d velocity
-#define HUD_NOSOUNDS			(1 << 11) // disables sounds on personal best, world record etc
+#define HUD_2DVEL				(1 << 7) // shows 2d velocity
+#define HUD_HIDEPLAYERS			(1 << 8) // hide the other players
+#define HUD_NOSOUNDS			(1 << 9) // hide sounds
+#define HUD_BITCOUNT			10
+
 
 #define SHAVIT_LOG_QUERIES 0
 
@@ -220,6 +222,16 @@ enum struct timer_snapshot_t
 	bool bStageTimer;
 }
 
+// This is used instead of `TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, fSpeed)`.
+// Why: TeleportEntity somehow triggers the zone EndTouch which fucks with `InsideZone`.
+stock void DumbSetVelocity(int client, float fSpeed[3])
+{
+	// Someone please let me know if any of these are unnecessary.
+	SetEntPropVector(client, Prop_Data, "m_vecBaseVelocity", NULL_VECTOR);
+	SetEntPropVector(client, Prop_Data, "m_vecVelocity", fSpeed);
+	SetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", fSpeed); // m_vecBaseVelocity+m_vecVelocity
+}
+
 stock void Shavit_LogQuery(const char[] query)
 {
 	static File hLogFile;
@@ -252,7 +264,7 @@ methodmap Database2 < Database
 #if SHAVIT_LOG_QUERIES
 		Shavit_LogQuery(query);
 #endif
-		this.Query(callback, query, data, prio);
+		view_as<Database>(this).Query(callback, query, data, prio);
 	}
 }
 
@@ -268,7 +280,7 @@ methodmap Transaction2 < Transaction
 #if SHAVIT_LOG_QUERIES
 		Shavit_LogQuery(query);
 #endif
-		return this.AddQuery(query, data);
+		return view_as<Transaction>(this).AddQuery(query, data);
 	}
 }
 
@@ -289,6 +301,32 @@ stock Database GetTimerDatabaseHandle(bool reuse_persistent_connection=true)
 	else
 	{
 		db = SQLite_UseDatabase("shavit", sError, 255);
+	}
+
+	// support unicode names
+	if (!db.SetCharset("utf8mb4"))
+	{
+		db.SetCharset("utf8");
+	}
+
+	return db;
+}
+
+stock Database GetZonesDatabaseHandle(bool reuse_persistent_connection=true)
+{
+	Database db = null;
+	char sError[255];
+
+	if(SQL_CheckConfig("shavit-zones"))
+	{
+		if((db = SQL_Connect("shavit-zones", reuse_persistent_connection, sError, 255)) == null)
+		{
+			SetFailState("Timer startup failed. Reason: %s", sError);
+		}
+	}
+	else
+	{
+		db = SQLite_UseDatabase("shavit-zones", sError, 255);
 	}
 
 	// support unicode names
@@ -1215,32 +1253,6 @@ forward void Shavit_OnUserDeleteData(int client, int steamid);
 forward void Shavit_OnDeleteRestOfUserSuccess(int client, int steamid);
 
 /**
- * Called when a player RTV's.
- * Requires shavit-mapchooser.
- *
- * @param client					Client index.
- * @noreturn
- */
-forward void Shavit_OnRTV(int client);
-
-/**
- * Called when a player UNRTV's.
- * Requires shavit-mapchooser.
- *
- * @param client					Client index.
- * @noreturn
- */
-forward void Shavit_OnUnRTV(int client);
-
-/**
- * Called when the map changes from an RTV.
- * Requires shavit-mapchooser.
- *
- * @noreturn
- */
-forward void Shavit_OnSuccesfulRTV();
-
-/**
  * Returns bhoptimer's database handle.
  * Call within Shavit_OnDatabaseLoaded. Safety is not guaranteed anywhere else!
  *
@@ -1343,6 +1355,15 @@ native float Shavit_GetClientTime(int client);
  * @return                          Timer track.
  */
 native int Shavit_GetClientTrack(int client);
+
+/**
+ * Set the client's track.
+ *
+ * @param client					Client index.
+ * @param track						Track_Main/Track_Bonus etc..
+ * @return                          Boolean.
+ */
+native bool Shavit_SetClientTrack(int client, int track);
 
 /**
  * Retrieve client jumps since timer start.
@@ -1930,6 +1951,26 @@ native void Shavit_SetClientTimescale(int client, float scale);
 native float Shavit_GetClientTimescale(int client);
 
 /**
+ * Sets the clients dynamic speed.
+ * Note: Values below 0.0 won't be applied to client.
+ *
+ * @param client					Client index
+ * @param speed						New player speed
+ *
+ * @noreturn
+ */
+native bool Shavit_SetClientSpeed(int client, float speed);
+
+/**
+ * Gets the clients dynamic speed.
+ *
+ * @param client					Client index
+ *
+ * @return							Client's dynamic speed
+ */
+native float Shavit_GetClientSpeed(int client);
+
+/**
  * Something to be used by the checkpoint plugin to trigger updating laggedmovement.
  *
  * @param client                    Client index
@@ -1966,6 +2007,7 @@ public void __pl_shavit_SetNTVOptional()
 	MarkNativeAsOptional("Shavit_GetClientJumps");
 	MarkNativeAsOptional("Shavit_GetClientTime");
 	MarkNativeAsOptional("Shavit_GetClientTrack");
+	MarkNativeAsOptional("Shavit_SetClientTrack");
 	MarkNativeAsOptional("Shavit_GetDatabase");
 	MarkNativeAsOptional("Shavit_GetOrderedStyles");
 	MarkNativeAsOptional("Shavit_GetStrafeCount");
@@ -2008,6 +2050,8 @@ public void __pl_shavit_SetNTVOptional()
 	MarkNativeAsOptional("Shavit_Zones_DeleteMap");
 	MarkNativeAsOptional("Shavit_GetClientTimescale");
 	MarkNativeAsOptional("Shavit_SetClientTimescale");
+	MarkNativeAsOptional("Shavit_GetClientSpeed");
+	MarkNativeAsOptional("Shavit_SetClientSpeed");
 	MarkNativeAsOptional("Shavit_GetAvgVelocity");
 	MarkNativeAsOptional("Shavit_GetMaxVelocity");
 	MarkNativeAsOptional("Shavit_SetAvgVelocity");

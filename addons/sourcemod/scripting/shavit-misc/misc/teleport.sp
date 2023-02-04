@@ -103,9 +103,9 @@ bool Teleport(int client, int targetserial)
 	float vecPosition[3];
 	GetClientAbsOrigin(iTarget, vecPosition);
 
-	Shavit_StopTimer(client);
+	Shavit_PauseTimer(client);
 
-	TeleportEntity(client, vecPosition, NULL_VECTOR, NULL_VECTOR);
+	TeleportEntity(client, vecPosition, NULL_VECTOR, view_as<float>({0.0, 0.0, 0.0}));
 
 	return true;
 }

@@ -68,37 +68,6 @@ public int Native_GetPlainChatrank(Handle handler, int numParams)
 	CS_GetClientClanTag(client, sTag, 32);
 	ReplaceString(buf, sizeof(buf), "{clan}", sTag);
 
-	if (gB_Rankings)
-	{
-		int iRank = Shavit_GetRank(client);
-		char sRank[16];
-		IntToString(iRank, sRank, 16);
-		ReplaceString(buf, sizeof(buf), "{rank}", sRank);
-
-		int iRanked = Shavit_GetRankedPlayers();
-
-		if (iRanked == 0)
-		{
-			iRanked = 1;
-		}
-
-		float fPercentile = (float(iRank) / iRanked) * 100.0;
-		FormatEx(sRank, 16, "%.01f", fPercentile);
-		ReplaceString(buf, sizeof(buf), "{rank1}", sRank);
-
-		FormatEx(sRank, 16, "%.02f", fPercentile);
-		ReplaceString(buf, sizeof(buf), "{rank2}", sRank);
-
-		FormatEx(sRank, 16, "%.03f", fPercentile);
-		ReplaceString(buf, sizeof(buf), "{rank3}", sRank);
-
-		FormatEx(sRank, 16, "%d", Shavit_GetWRHolderRank(client));
-		ReplaceString(buf, sizeof(buf), "{wrrank}", sRank);
-
-		FormatEx(sRank, 16, "%d", Shavit_GetWRCount(client));
-		ReplaceString(buf, sizeof(buf), "{wrs}", sRank);
-	}
-
 	TrimString(buf);
 	SetNativeString(2, buf, GetNativeCell(3), true);
 	return 0;

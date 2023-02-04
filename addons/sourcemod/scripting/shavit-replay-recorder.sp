@@ -122,6 +122,8 @@ public void OnPluginStart()
 
 	if(gB_Late)
 	{
+		Shavit_OnStyleConfigLoaded(Shavit_GetStyleCount());
+
 		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (IsValidClient(i) && !IsFakeClient(i))
@@ -150,14 +152,7 @@ public void OnLibraryRemoved(const char[] name)
 
 public void OnMapStart()
 {
-	if (!LoadReplayConfig())
-	{
-		SetFailState("Could not load the replay bots' configuration file. Make sure it exists (addons/sourcemod/configs/shavit-replay.cfg) and follows the proper syntax!");
-	}
-
 	GetLowercaseMapName(gS_Map);
-
-	Replay_CreateDirectories(gS_ReplayFolder, gI_Styles);
 }
 
 public void Shavit_OnStyleConfigLoaded(int styles)
@@ -167,7 +162,14 @@ public void Shavit_OnStyleConfigLoaded(int styles)
 		Shavit_GetStyleStringsStruct(i, gS_StyleStrings[i]);
 	}
 
+	if (!LoadReplayConfig())
+	{
+		SetFailState("Could not load the replay bots' configuration file. Make sure it exists (addons/sourcemod/configs/shavit-replay.cfg) and follows the proper syntax!");
+	}
+
 	gI_Styles = styles;
+
+	Replay_CreateDirectories(gS_ReplayFolder, gI_Styles);
 }
 
 public void OnClientPutInServer(int client)
@@ -297,7 +299,7 @@ static void BuildConfigs()
 
 static void CreateConVars()
 {
-	gCV_Enabled = new Convar("shavit_replay_enabled", "1", "Enable replay bot functionality?", 0, true, 0.0, true, 1.0);
+	gCV_Enabled = new Convar("shavit_replay_recorder_enabled", "1", "Enable replay bot functionality?", 0, true, 0.0, true, 1.0);
 	gCV_TimeLimit = new Convar("shavit_replay_timelimit", "7200.0", "Maximum amount of time (in seconds) to allow saving to disk.\nDefault is 7200 (2 hours)\n0 - Disabled");
 	gCV_PlaybackPreRunTime = new Convar("shavit_replay_preruntime", "1.5", "Time (in seconds) to record before a player leaves start zone.", 0, true, 0.0, true, 2.0);
 	gCV_PlaybackPostRunTime = new Convar("shavit_replay_postruntime", "2.0", "Time (in seconds) to record after a player enters the end zone.", 0, true, 0.0, true, 2.0);

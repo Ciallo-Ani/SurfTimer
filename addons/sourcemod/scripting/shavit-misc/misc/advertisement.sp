@@ -48,7 +48,7 @@ public Action Command_ToggleAdverts(int client, int args)
 		Shavit_PrintToChat(client, "%T", (sCookie[0] == '1') ? "AdvertisementsEnabled" : "AdvertisementsDisabled", client);
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 

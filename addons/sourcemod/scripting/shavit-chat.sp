@@ -28,9 +28,6 @@
 #include <shavit/colors>
 #include <shavit/chat>
 
-#undef REQUIRE_PLUGIN
-#include <shavit/rankings>
-
 #undef REQUIRE_EXTENSIONS
 #include <cstrike>
 
@@ -57,7 +54,6 @@ char gS_ControlCharacters[][] = {"\x01", "\x02", "\x03", "\x04", "\x05", "\x06",
 Database gH_SQL = null;
 
 // modules
-bool gB_Rankings = false;
 bool gB_Stats = false;
 
 // cvars
@@ -140,12 +136,7 @@ public void OnPluginStart()
 
 public void OnLibraryAdded(const char[] name)
 {
-	if(StrEqual(name, "shavit-rankings"))
-	{
-		gB_Rankings = true;
-	}
-
-	else if(StrEqual(name, "shavit-stats"))
+	if(StrEqual(name, "shavit-stats"))
 	{
 		gB_Stats = true;
 	}
@@ -153,12 +144,7 @@ public void OnLibraryAdded(const char[] name)
 
 public void OnLibraryRemoved(const char[] name)
 {
-	if(StrEqual(name, "shavit-rankings"))
-	{
-		gB_Rankings = false;
-	}
-
-	else if(StrEqual(name, "shavit-stats"))
+	if(StrEqual(name, "shavit-stats"))
 	{
 		gB_Stats = false;
 	}

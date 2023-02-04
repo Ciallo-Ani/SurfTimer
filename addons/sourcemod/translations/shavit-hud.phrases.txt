@@ -146,26 +146,6 @@
 		"en"		"Speed"
 		"chi"		"速度"
 	}
-	"HudStrafeText"
-	{
-		"en"		"Strafes"
-		"chi"		"加速数"
-	}
-	"HudTimeLeft"
-	{
-		"en"		"Time left"
-		"chi"		"剩下的时间"
-	}
-	"HudSync"
-	{
-		"en"		"Sync"
-		"chi"		"同步"
-	}
-	"HudPerfs"
-	{
-		"en"		"Perfect jumps"
-		"chi"		"完美的跳跃数"
-	}
 	"HudPracticeMode"
 	{
 		"en"		"[PRACTICE]"
@@ -212,25 +192,20 @@
 		"en"		"Hide weapons"
 		"chi"		"隐藏武器"
 	}
-	"HudTopLeft"
-	{
-		"en"		"Top left HUD (WR/PB)"
-		"chi"		"左上角HUD(SR/个人)"
-	}
 	"Hud2dVel"
 	{
 		"en"		"Use 2D Velocity"
 		"chi"		"使用2D速度(xy)"
 	}
-	"HudNoRecordSounds"
+	"HudHidePlayers"
 	{
-		"en"		"No record sounds"
-		"chi"		"无破记录声音"
+		"en"		"Hide players"
+		"chi"		"隐藏玩家"
 	}
-	"HudPracticeModeAlert"
+	"HudHideSounds"
 	{
-		"en"		"No practice mode alert"
-		"chi"		"无练习模式警报"
+		"en"		"Hide Sounds"
+		"chi"		"隐藏声音"
 	}
 	"HudRankText"
 	{
@@ -265,12 +240,12 @@
 	"HudWRPBText"
 	{
 		"en"		"SR mode[+] | PB mode[-]"
-		"chi"		"SR模式[+] | PB模式[-]"
+		"chi"		"服务器最佳纪录模式[+] | 个人记录模式[-]"
 	}
 	"HudPrestrafeText"
 	{
 		"en"		"Prestrafe text"
-		"chi"		"Prestrafe信息"
+		"chi"		"出起点速度信息"
 	}
 	"HudStage"
 	{
@@ -326,26 +301,26 @@
 	"StartPrestrafe"
 	{
 		"#format"	"{1:d},{2:s},{3:s}"
-		"en"		"{grey}Start: {grey2}{1} u/s {default}| {gold}WR:{default} {2} | {darkblue}PB:{default} {3}"
-		"chi"		"{grey}起点 Prestrafe: {grey2}{1} u/s {default}| {gold}WR:{default} {2} | {darkblue}PB:{default} {3}"
+		"en"		"{grey}Start: {grey2}{1} u/s {default}| {gold}最佳:{default} {2} | {darkblue}个人:{default} {3}"
+		"chi"		"{grey}出起点速度: {grey2}{1} u/s {default}| {gold}最佳:{default} {2} | {darkblue}个人:{default} {3}"
 	}
 	"CPStagePrestrafe"
 	{
 		"#format"	"{1:d},{2:d},{3:s},{4:s}"
-		"en"		"{grey}CP{default} [{orchid}{1}{default}] | Prestrafe: {grey2}{2} u/s{default} | {gold}WR:{default} {3} | {darkblue}PB:{default} {4}."
-		"chi"		"{grey}检查点{default} [{orchid}{1}{default}] | Prestrafe: {grey2}{2} u/s{default} | {gold}WR:{default} {3} | {darkblue}PB:{default} {4}."
+		"en"		"{grey}CP{default} [{orchid}{1}{default}] | Prestrafe: {grey2}{2} u/s{default} | {gold}最佳:{default} {3} | {darkblue}个人:{default} {4}."
+		"chi"		"{grey}检查点{default} [{orchid}{1}{default}] | 出起点速度: {grey2}{2} u/s{default} | {gold}最佳:{default} {3} | {darkblue}个人:{default} {4}."
 	}
 	"CPLinearPrestrafe"
 	{
 		"#format"	"{1:d},{2:d},{3:s},{4:s}"
-		"en"		"{grey}CP{default} [{orchid}{1}{default}] | Speed: {grey2}{2} u/s{default} | {gold}WR:{default} {3} | {darkblue}PB:{default} {4}."
-		"chi"		"{grey}检查点{default} [{orchid}{1}{default}] | Speed: {grey2}{2} u/s{default} | {gold}WR:{default} {3} | {darkblue}PB:{default} {4}."
+		"en"		"{grey}CP{default} [{orchid}{1}{default}] | 速度: {grey2}{2} u/s{default} | {gold}最佳:{default} {3} | {darkblue}个人:{default} {4}."
+		"chi"		"{grey}检查点{default} [{orchid}{1}{default}] | 速度: {grey2}{2} u/s{default} | {gold}最佳:{default} {3} | {darkblue}个人:{default} {4}."
 	}
 	"StagePrestrafe"
 	{
 		"#format"	"{1:d},{2:d},{3:s},{4:s}"
-		"en"		"{grey}Stage {1}: {grey2}{2} u/s {default}| {gold}WRCP:{default} {3} | {darkblue}PB:{default} {4}"
-		"chi"		"{grey}关卡 [{1}] Prestrafe: {grey2}{2} u/s {default}| {gold}WRCP:{default} {3} | {darkblue}PB:{default} {4}"
+		"en"		"{grey}Stage {1}: {grey2}{2} u/s {default}| {gold}关卡最佳:{default} {3} | {darkblue}个人:{default} {4}"
+		"chi"		"{grey}关卡 [{1}] 出起点速度: {grey2}{2} u/s {default}| {gold}关卡最佳:{default} {3} | {darkblue}个人:{default} {4}"
 	}
 	"PrestrafeIncrease"
 	{
@@ -365,20 +340,20 @@
 	"ZoneCheckpointTime"
 	{
 		"#format"	"{1:d},{2:s},{3:s},{4:s}"
-		"en"		"{grey}CP{default} [{orchid}{1}{default}] | {grey2}{2}{default} | {palered}WR{default} {yellow}{3}{default} | {darkblue}PB{default} {yellow}{4}{default}"
-		"chi"		"{grey}检查点{default} [{orchid}{1}{default}] | {grey2}{2}{default} | {palered}WR{default} {yellow}{3}{default} | {darkblue}PB{default} {yellow}{4}{default}"
+		"en"		"{grey}CP{default} [{orchid}{1}{default}] | {grey2}{2}{default} | {palered}最佳{default} {yellow}{3}{default} | {darkblue}个人{default} {yellow}{4}{default}"
+		"chi"		"{grey}检查点{default} [{orchid}{1}{default}] | {grey2}{2}{default} | {palered}最佳{default} {yellow}{3}{default} | {darkblue}个人{default} {yellow}{4}{default}"
 	}
 	"ZoneStageTime-Improved"
 	{
 		"#format"	"{1:d},{2:s},{3:s},{4:s},{5:s}"
-		"en"		"{grey}Stage{default} [{orchid}{1}{default}] | {grey2}{2}{default} | {palered}WRCP{default} {yellow}{3}{default} | {darkblue}PB{default} {yellow}{4}{default} | {gold}Rank{default}: {blue}{5}{default}"
-		"chi"		"{grey}关卡{default} [{orchid}{1}{default}] | {grey2}{2}{default} | {palered}WRCP{default} {yellow}{3}{default} | {darkblue}PB{default} {yellow}{4}{default} | {gold}排名{default}: {blue}{5}{default}"
+		"en"		"{grey}Stage{default} [{orchid}{1}{default}] | {grey2}{2}{default} | {palered}关卡最佳{default} {yellow}{3}{default} | {darkblue}个人{default} {yellow}{4}{default} | {gold}Rank{default}: {blue}{5}{default}"
+		"chi"		"{grey}关卡{default} [{orchid}{1}{default}] | {grey2}{2}{default} | {palered}关卡最佳{default} {yellow}{3}{default} | {darkblue}个人{default} {yellow}{4}{default} | {gold}排名{default}: {blue}{5}{default}"
 	}
 	"ZoneStageTime-Noimproved"
 	{
 		"#format"	"{1:d},{2:s},{3:s},{4:s}"
-		"en"		"{grey}Stage{default} [{orchid}{1}{default}] | {grey2}{2}{default} | {palered}WRCP{default} {yellow}{3}{default} | {darkblue}PB{default} {yellow}{4}{default}"
-		"chi"		"{grey}关卡{default} [{orchid}{1}{default}] | {grey2}{2}{default} | {palered}WRCP{default} {yellow}{3}{default} | {darkblue}PB{default} {yellow}{4}{default}"
+		"en"		"{grey}Stage{default} [{orchid}{1}{default}] | {grey2}{2}{default} | {palered}关卡最佳{default} {yellow}{3}{default} | {darkblue}个人{default} {yellow}{4}{default}"
+		"chi"		"{grey}关卡{default} [{orchid}{1}{default}] | {grey2}{2}{default} | {palered}关卡最佳{default} {yellow}{3}{default} | {darkblue}个人{default} {yellow}{4}{default}"
 	}
 	"EnterStageMessage_Bot_Improved"
 	{
@@ -395,7 +370,22 @@
 	"OnWRCP"
 	{
 		"#format"	"{1:N},{2:d},{3:s},{4:s},{5:s},{6:s}"
-		"en"		"{gold}{1}{default} beat {palered}[Stage {2}]{default} record! Mode: {blue}{3}{default} Time: {orchid}{4}{default} ({green}WR {5}{default}) Rank: {bluegrey}{6}{default}."
-		"chi"		"{gold}{1}{default} 打破了 {palered}[关卡 {2}]{default} 记录! 模式: {blue}{3}{default} 时间: {orchid}{4}{default} ({green}WR {5}{default}) 排名: {bluegrey}{6}{default}."
+		"en"		"{gold}{1}{default} beat {palered}[Stage {2}]{default} record! Mode: {blue}{3}{default} Time: {orchid}{4}{default} ({green}最佳 {5}{default}) Rank: {bluegrey}{6}{default}."
+		"chi"		"{gold}{1}{default} 打破了 {palered}[关卡 {2}]{default} 记录! 模式: {blue}{3}{default} 时间: {orchid}{4}{default} ({green}最佳 {5}{default}) 排名: {bluegrey}{6}{default}."
+	}
+	"MapCompletion"
+	{
+		"#format"	"{1:N},{2:s},{3:s},{4:s},{5:s},{6:s},{7:s}"
+		"en"		"{team}{1}{default} 完成了 [{darkblue}{2}{default}] 时间: {orchid}{3}{default}({6}) 模式: {grey}{4}{default} 排名: {blue}{5}{default}. ({darkblue}个人{default} {7})"
+	}
+	"MapCompletion-Noimproved"
+	{
+		"#format"	"{1:N},{2:s},{3:s},{4:s},{5:s},{6:s}"
+		"en"		"{team}{1}{default} 完成了 [{darkblue}{2}{default}] 时间: {orchid}{3}{default}({5}) 模式: {grey}{4}{default}. ({darkblue}个人{default} {6})"
+	}
+	"MapCompletion-Unranked"
+	{
+		"#format"	"{1:s},{2:N},{3:s},{4:s},{5:s},{6:s},{7:s}"
+		"en"		"{darkred}{1}{default} {team}{2}{default} 完成了 [{darkblue}{3}{default}] 时间: {orchid}{4}{default}({6}) 模式: {grey}{5}{default}. ({darkblue}个人{default} {7})"
 	}
 }

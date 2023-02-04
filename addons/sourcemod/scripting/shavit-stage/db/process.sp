@@ -75,6 +75,13 @@ public void Trans_InsertCP_PR_Failed(Database db, any data, int numQueries, cons
 
 void DB_OnFinishStage(int client, int stage, int style, float time, float oldtime)
 {
+	if(time <= 1.0) // buged
+	{
+		Shavit_PrintToChat(client, "系统判定该记录为bug记录, 已移除.");
+		Shavit_LogMessage("Client %N bugged, style -> %d, stage -> %d, time -> %f, map -> %s", client, style, stage, time, gS_Map);
+		return;
+	}
+
 	int iOverwrite = PB_NoQuery;
 
 	if(Shavit_GetStyleSettingInt(style, "unranked") || Shavit_IsPracticeMode(client))

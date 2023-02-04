@@ -20,7 +20,7 @@ public Action Command_CCHelp(int client, int args)
 	{
 		ReplyToCommand(client, "%t", "NoConsole");
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	Shavit_PrintToChat(client, "%T", "CheckConsole", client);
@@ -32,7 +32,7 @@ public Action Command_CCHelp(int client, int args)
 
 	PrintToConsole(client, "%T", "CCHelp_CSGO_1", client);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_CCName(int client, int args)
@@ -41,14 +41,14 @@ public Action Command_CCName(int client, int args)
 	{
 		ReplyToCommand(client, "%t", "NoConsole");
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	if(!HasCustomChat(client))
 	{
 		Shavit_PrintToChat(client, "%T", "NoCommandAccess", client);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	char sArgs[128];
@@ -60,7 +60,7 @@ public Action Command_CCName(int client, int args)
 		Shavit_PrintToChat(client, "%T", "ArgumentsMissing", client, "sm_ccname <text>");
 		Shavit_PrintToChat(client, "%T", "ChatCurrent", client, gS_CustomName[client]);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	else if(StrEqual(sArgs, "off"))
@@ -69,7 +69,7 @@ public Action Command_CCName(int client, int args)
 
 		gB_NameEnabled[client] = false;
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	Shavit_PrintToChat(client, "%T", "ChatUpdated", client);
@@ -82,7 +82,7 @@ public Action Command_CCName(int client, int args)
 	gB_NameEnabled[client] = true;
 	strcopy(gS_CustomName[client], 128, sArgs);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_CCMessage(int client, int args)
@@ -91,14 +91,14 @@ public Action Command_CCMessage(int client, int args)
 	{
 		ReplyToCommand(client, "%t", "NoConsole");
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	if(!HasCustomChat(client))
 	{
 		Shavit_PrintToChat(client, "%T", "NoCommandAccess", client);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	char sArgs[32];
@@ -110,7 +110,7 @@ public Action Command_CCMessage(int client, int args)
 		Shavit_PrintToChat(client, "%T", "ArgumentsMissing", client, "sm_ccmsg <text>");
 		Shavit_PrintToChat(client, "%T", "ChatCurrent", client, gS_CustomMessage[client]);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	else if(StrEqual(sArgs, "off"))
@@ -119,7 +119,7 @@ public Action Command_CCMessage(int client, int args)
 
 		gB_MessageEnabled[client] = false;
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	Shavit_PrintToChat(client, "%T", "ChatUpdated", client);
@@ -132,31 +132,31 @@ public Action Command_CCMessage(int client, int args)
 	gB_MessageEnabled[client] = true;
 	strcopy(gS_CustomMessage[client], 16, sArgs);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_ChatRanks(int client, int args)
 {
 	if(client == 0)
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	ShowChatRanksMenu(client, 0);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_Ranks(int client, int args)
 {
 	if(client == 0)
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	ShowRanksMenu(client, 0);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_CCList(int client, int args)
@@ -171,7 +171,7 @@ public Action Command_CCList(int client, int args)
 		}
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_ReloadChatRanks(int client, int args)
@@ -181,7 +181,7 @@ public Action Command_ReloadChatRanks(int client, int args)
 		ReplyToCommand(client, "Reloaded chatranks config.");
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_CCAdd(int client, int args)
@@ -189,7 +189,7 @@ public Action Command_CCAdd(int client, int args)
 	if (args == 0)
 	{
 		ReplyToCommand(client, "Missing steamid3");
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	char sArgString[32];
@@ -200,7 +200,7 @@ public Action Command_CCAdd(int client, int args)
 	if (iSteamID < 1)
 	{
 		ReplyToCommand(client, "Invalid steamid");
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	DB_AddCCAccess(iSteamID);
@@ -215,7 +215,7 @@ public Action Command_CCAdd(int client, int args)
 
 	ReplyToCommand(client, "Added CC access for %s", sArgString);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_CCDelete(int client, int args)
@@ -223,7 +223,7 @@ public Action Command_CCDelete(int client, int args)
 	if (args == 0)
 	{
 		ReplyToCommand(client, "Missing steamid3");
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	char sArgString[32];
@@ -234,7 +234,7 @@ public Action Command_CCDelete(int client, int args)
 	if (iSteamID < 1)
 	{
 		ReplyToCommand(client, "Invalid steamid");
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	DB_DeleteCCAccess(iSteamID);
@@ -249,5 +249,5 @@ public Action Command_CCDelete(int client, int args)
 
 	ReplyToCommand(client, "Deleted CC access for %s", sArgString);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }

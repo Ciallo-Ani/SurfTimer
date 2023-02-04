@@ -61,12 +61,12 @@ bool HasRankAccess(int client, int rank)
 		return true;
 	}
 
-	if(/*!gB_Rankings ||*/ !gCV_RankingsIntegration.BoolValue)
+	if(!gCV_RankingsIntegration.BoolValue)
 	{
 		return false;
 	}
 
-	if ((!gB_Rankings && (cache.iRequire == Require_Rank || cache.iRequire == Require_Points))
+	if (((cache.iRequire == Require_Rank || cache.iRequire == Require_Points))
 	|| (!gB_Stats && (cache.iRequire == Require_WR_Count || cache.iRequire == Require_WR_Rank)))
 	{
 		return false;
@@ -76,23 +76,9 @@ bool HasRankAccess(int client, int rank)
 
 	switch (cache.iRequire)
 	{
-		case Require_Rank:
+		case Require_Rank, Require_Points, Require_WR_Count, Require_WR_Rank:
 		{
-			fVal = float(Shavit_GetRank(client));
-			fTotal = float(Shavit_GetRankedPlayers());
-		}
-		case Require_Points:
-		{
-			fVal = Shavit_GetPoints(client);
-		}
-		case Require_WR_Count:
-		{
-			fVal = float(Shavit_GetWRCount(client));
-		}
-		case Require_WR_Rank:
-		{
-			fVal = float(Shavit_GetWRHolderRank(client));
-			fTotal = float(Shavit_GetWRHolders());
+
 		}
 	}
 
@@ -276,39 +262,6 @@ void FormatChat(int client, char[] buffer, int size)
 	char temp[32];
 	CS_GetClientClanTag(client, temp, 32);
 	ReplaceString(buffer, size, "{clan}", temp);
-
-	if(gB_Rankings)
-	{
-		int iRank = Shavit_GetRank(client);
-		IntToString(iRank, temp, 32);
-		ReplaceString(buffer, size, "{rank}", temp);
-
-		int iRanked = Shavit_GetRankedPlayers();
-
-		if(iRanked == 0)
-		{
-			iRanked = 1;
-		}
-
-		float fPercentile = (float(iRank) / iRanked) * 100.0;
-		FormatEx(temp, 32, "%.01f", fPercentile);
-		ReplaceString(buffer, size, "{rank1}", temp);
-
-		FormatEx(temp, 32, "%.02f", fPercentile);
-		ReplaceString(buffer, size, "{rank2}", temp);
-
-		FormatEx(temp, 32, "%.03f", fPercentile);
-		ReplaceString(buffer, size, "{rank3}", temp);
-
-		FormatEx(temp, 32, "%0.f", Shavit_GetPoints(client));
-		ReplaceString(buffer, size, "{pts}", temp);
-
-		FormatEx(temp, 32, "%d", Shavit_GetWRHolderRank(client));
-		ReplaceString(buffer, size, "{wrrank}", temp);
-
-		FormatEx(temp, 32, "%d", Shavit_GetWRCount(client));
-		ReplaceString(buffer, size, "{wrs}", temp);
-	}
 
 	GetClientName(client, temp, 32);
 	ReplaceString(buffer, size, "{name}", temp);

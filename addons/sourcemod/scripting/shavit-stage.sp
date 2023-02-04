@@ -5,6 +5,7 @@
 
 #include <sourcemod>
 #include <regex>
+
 #include <shavit>
 #include <shavit/stage>
 #include <shavit/wr>
@@ -270,7 +271,7 @@ public void Shavit_OnWRDeleted(int style, int id, int track, int accountid, cons
 	DB_DeleteWRCheckPoints(style, accountid, mapname);
 }
 
-public void Shavit_OnFinish_Post(int client, int style, float time, int jumps, int strafes, float sync, int rank, int overwrite, int track, float oldtime, float avgvel, float maxvel, int timestamp)
+public void Shavit_OnFinish_Post(int client, int style, float time, int jumps, int strafes, float sync, int rank, int overwrite, int track, float oldtime, float oldwr, float avgvel, float maxvel, int timestamp)
 {
 	Shavit_OnFinish_Post_DBProcess(client, style, track, overwrite, rank);
 }

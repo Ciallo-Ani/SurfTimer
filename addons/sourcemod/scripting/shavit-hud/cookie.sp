@@ -1,7 +1,7 @@
 void InitCookies()
 {
-	gH_HUDCookie = RegClientCookie("shavit_hud_setting", "HUD settings", CookieAccess_Protected);
-	gH_HUDCookieMain = RegClientCookie("shavit_hud_settingmain", "HUD settings for hint text.", CookieAccess_Protected);
+	gH_HUDCookie = new Cookie("shavit_hud_setting", "HUD settings", CookieAccess_Protected);
+	gH_HUDCookieMain = new Cookie("shavit_hud_settingmain", "HUD settings for hint text.", CookieAccess_Protected);
 }
 
 void OnClientCookiesCached_HUDMain(int client)

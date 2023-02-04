@@ -16,7 +16,7 @@ stock void FormatDiffPreStrafeSpeed(char[] buffer, float originSpeed, float wrSp
 
 	if(wrSpeed <= 0.0)
 	{
-		strcopy(buffer, 64, "N/A");
+		strcopy(buffer, 64, "无");
 	}
 	else
 	{

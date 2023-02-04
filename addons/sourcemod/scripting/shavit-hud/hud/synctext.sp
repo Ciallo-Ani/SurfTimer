@@ -46,10 +46,10 @@ stock void AddTextToBuffer(int client, huddata_t data, char[] buffer, int maxlen
 
 	if((gI_HUD2Settings[client] & HUD2_WRPB) == 0)
 	{
-		FormatEx(buffer, maxlen, "PB: %s \t\t Rank: %d/%d", sPBTime, data.iRank, data.iFinishNum);
+		FormatEx(buffer, maxlen, "个人时间: %s \t\t 排名: %d/%d", sPBTime, data.iRank, data.iFinishNum);
 	}
 	else
 	{
-		FormatEx(buffer, maxlen, "SR: %s \t\t Rank: %d/%d", sWRTime, data.iRank, data.iFinishNum);
+		FormatEx(buffer, maxlen, "最佳纪录: %s \t\t 排名: %d/%d", sWRTime, data.iRank, data.iFinishNum);
 	}
 }

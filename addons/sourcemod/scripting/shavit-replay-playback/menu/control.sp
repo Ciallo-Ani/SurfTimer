@@ -83,13 +83,6 @@ public int MenuHandler_Replay(Menu menu, MenuAction action, int param1, int para
 
 			if (index != -1)
 			{
-				if(gA_BotInfo[index].iTrack == 0 && gA_BotInfo[index].iStage == 0)
-				{
-					Shavit_PrintToChat(param1, "{darkred}无法对主线电脑进行跳帧操作{default}");
-					OpenReplayMenu(param1);
-					return 0;
-				}
-
 				gA_BotInfo[index].iTick += RoundToFloor(seconds * gF_Tickrate);
 
 				if (gA_BotInfo[index].iTick < 0)
@@ -130,13 +123,6 @@ public int MenuHandler_Replay(Menu menu, MenuAction action, int param1, int para
 
 void OpenReplayTrackMenu(int client)
 {
-	if(gI_DynamicBots >= gCV_DynamicBotLimit.IntValue)
-	{
-		Shavit_PrintToChat(client, "电脑数量达到极限了");
-
-		return;
-	}
-
 	gB_MenuBonus[client] = false;
 	gB_MenuStage[client] = false;
 	gI_MenuType[client] = Replay_Dynamic;

@@ -47,7 +47,7 @@ public Action Command_Noclip(int client, int args)
 
 	if (gI_LastNoclipTick[client] == GetGameTickCount())
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	gI_LastNoclipTick[client] = GetGameTickCount();
@@ -56,25 +56,25 @@ public Action Command_Noclip(int client, int args)
 	{
 		Shavit_PrintToChat(client, "%T", "FeatureDisabled", client);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 	else if(gCV_NoclipMe.IntValue == 2 && !CheckCommandAccess(client, "admin_noclipme", ADMFLAG_CHEATS))
 	{
 		Shavit_PrintToChat(client, "%T", "LackingAccess", client);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	if(!IsPlayerAlive(client))
 	{
 		Shavit_PrintToChat(client, "%T", "CommandAlive", client);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	UpdateByNoclipStatus(client, GetEntityMoveType(client) == MOVETYPE_WALK);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action CommandListener_Noclip(int client, const char[] command, int args)
@@ -88,7 +88,7 @@ public Action CommandListener_Noclip(int client, const char[] command, int args)
 
 	UpdateByNoclipStatus(client, command[0] == '+');
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_NoclipIgnoreTrigger(int client, int args)
@@ -96,7 +96,7 @@ public Action Command_NoclipIgnoreTrigger(int client, int args)
 	gB_CanTouchTrigger[client] = !gB_CanTouchTrigger[client];
 	Shavit_PrintToChat(client, "%T", (gB_CanTouchTrigger[client])?"NoclipCanTrigger":"NoclipCannotTrigger", client);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action CommandListener_funcommands_Noclip(int client, const char[] command, int args)
@@ -142,7 +142,7 @@ static void UpdateByNoclipStatus(int client, bool walking)
 {
 	if(walking)
 	{
-		if(Shavit_GetTimerStatus(client) != Timer_Paused && !Shavit_IsPracticeMode(client))
+		if(!Shavit_IsPracticeMode(client))
 		{
 			Shavit_PauseTimer(client);
 		}
@@ -152,11 +152,6 @@ static void UpdateByNoclipStatus(int client, bool walking)
 	}
 	else
 	{
-		if(Shavit_GetTimerStatus(client) == Timer_Paused)
-		{
-			Shavit_PrintToChat(client, "输入{palered}%s{default}恢复计时器", Shavit_GetClientTime(client) != 0.0 ? "!pause" : "!r");
-		}
-
 		SetEntityMoveType(client, MOVETYPE_WALK);
 	}
 }

@@ -47,9 +47,6 @@ public Plugin myinfo =
 Convar gCV_MinimumWorst = null;
 Convar gCV_Enabled = null;
 
-// module
-bool gB_HUD = false;
-
 
 
 #include "shavit-sounds/api.sp"
@@ -79,25 +76,6 @@ public void OnPluginStart()
 	OnPluginStart_InitSoundsCache();
 	CreateGlobalForwards();
 	CreateConVars();
-
-	// modules
-	gB_HUD = LibraryExists("shavit-hud");
-}
-
-public void OnLibraryAdded(const char[] name)
-{
-	if(StrEqual(name, "shavit-hud"))
-	{
-		gB_HUD = true;
-	}
-}
-
-public void OnLibraryRemoved(const char[] name)
-{
-	if(StrEqual(name, "shavit-hud"))
-	{
-		gB_HUD = false;
-	}
 }
 
 public void OnMapStart()
@@ -106,7 +84,7 @@ public void OnMapStart()
 	OnMapStart_LoadSounds();
 }
 
-public void Shavit_OnFinish_Post(int client, int style, float time, int jumps, int strafes, float sync, int rank, int overwrite, int track)
+public void Shavit_OnFinish_Post(int client, int style, float time, int jumps, int strafes, float sync, int rank, int overwrite, int track, float oldtime, float oldwr, float avgvel, float maxvel, int timestamp)
 {
 	if(!gCV_Enabled.BoolValue)
 	{

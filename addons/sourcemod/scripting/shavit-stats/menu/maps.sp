@@ -21,7 +21,7 @@ public Action Command_MapsDoneLeft(int client, int args)
 
 			if (target == -1)
 			{
-				return Plugin_Handled;
+				return Plugin_Continue;
 			}
 		}
 		else
@@ -75,7 +75,7 @@ public Action Command_MapsDoneLeft(int client, int args)
 
 	menu.Display(client, MENU_TIME_FOREVER);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public int MenuHandler_MapsDoneLeft(Menu menu, MenuAction action, int param1, int param2)
@@ -141,24 +141,21 @@ void ShowMaps(int client)
 	{
 		case MAPSDONE:
 		{
-			FormatEx(sQuery, 512, mysql_show_mapsdone, gI_TargetSteamID[client], gI_Style[client], gI_Track[client], (gB_Rankings)? "points DESC":"map");
+			FormatEx(sQuery, 512, mysql_show_mapsdone, gI_TargetSteamID[client], gI_Style[client], gI_Track[client], "map");
+			gH_SQL.Query(ShowMapsCallback, sQuery, GetClientSerial(client), DBPrio_High);
 		}
 		case MAPSLEFT:
 		{
-			if(gB_Rankings)
-			{
-				FormatEx(sQuery, 512, mysql_show_mapsleft_have_rankings, gI_Track[client], gI_TargetSteamID[client], gI_Style[client], gI_Track[client]);
-			}
-			else
-			{
-				FormatEx(sQuery, 512, mysql_show_mapsleft_no_rankings, gI_Track[client], gI_TargetSteamID[client], gI_Style[client], gI_Track[client]);
-			}
+			FormatEx(sQuery, 512, mysql_show_mapsleft_no_rankings, gI_Track[client], gI_TargetSteamID[client], gI_Style[client], gI_Track[client]);
+
+			Database db = GetZonesDatabaseHandle(false);
+			db.Query(ShowMapsCallback, sQuery, GetClientSerial(client), DBPrio_High);
+
+			delete db;
 		}
 	}
 
 	gB_CanOpenMenu[client] = false;
-
-	gH_SQL.Query(ShowMapsCallback, sQuery, GetClientSerial(client), DBPrio_High);
 }
 
 public void ShowMapsCallback(Database db, DBResultSet results, const char[] error, any data)
@@ -213,38 +210,14 @@ public void ShowMapsCallback(Database db, DBResultSet results, const char[] erro
 			char sTime[32];
 			FormatSeconds(time, sTime, 32);
 
-			float points = results.FetchFloat(5);
-
-			if(gB_Rankings && points > 0.0)
-			{
-				FormatEx(sDisplay, sizeof(sDisplay), "[#%d] %s - %s (%.03f %T)", rank, sMap, sTime, points, "MapsPoints", client);
-			}
-			else
-			{
-				FormatEx(sDisplay, sizeof(sDisplay), "[#%d] %s - %s (%d %T)", rank, sMap, sTime, jumps, "MapsJumps", client);
-			}
+			FormatEx(sDisplay, sizeof(sDisplay), "[#%d] %s - %s (%d %T)", rank, sMap, sTime, jumps, "MapsJumps", client);
 
 			int iRecordID = results.FetchInt(3);
 			IntToString(iRecordID, sRecordID, sizeof(sRecordID));
 		}
 		else
 		{
-			if(gB_Rankings)
-			{
-				int iTier = results.FetchInt(1);
-
-				if(results.IsFieldNull(1) || iTier == 0)
-				{
-					iTier = 1;
-				}
-
-				FormatEx(sDisplay, sizeof(sDisplay), "%s (Tier %d)", sMap, iTier);
-			}
-			else
-			{
-				sDisplay = sMap;
-			}
-
+			sDisplay = sMap;
 			sRecordID = sMap;
 		}
 
@@ -352,14 +325,6 @@ public void SQL_SubMenu_Callback(Database db, DBResultSet results, const char[] 
 
 		// 6 - map
 		results.FetchString(6, sMap, sizeof(sMap));
-
-		float points = results.FetchFloat(9);
-
-		if(gB_Rankings && points > 0.0)
-		{
-			FormatEx(sDisplay, 128, "%T: %.03f", "Points", client, points);
-			hMenu.AddItem("-1", sDisplay);
-		}
 
 		// 5 - date
 		char sDate[32];

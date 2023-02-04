@@ -42,7 +42,8 @@ void OpenStageMenu(int client, bool wrcp)
 	dp.WriteCell(GetClientSerial(client));
 	dp.WriteCell(wrcp?1:0);
 
-	gH_SQL.Query(SQL_OpenStageMenu_Callback, sQuery, dp);
+	Database db = GetZonesDatabaseHandle(false);
+	db.Query(SQL_OpenStageMenu_Callback, sQuery, dp);
 }
 
 public void SQL_OpenStageMenu_Callback(Database db, DBResultSet results, const char[] error, DataPack dp)
@@ -57,6 +58,9 @@ public void SQL_OpenStageMenu_Callback(Database db, DBResultSet results, const c
 	if(results == null)
 	{
 		LogError("Timer (GetStageMenu) SQL query failed. Reason: %s", error);
+
+		delete db;
+
 		return;
 	}
 
@@ -80,6 +84,8 @@ public void SQL_OpenStageMenu_Callback(Database db, DBResultSet results, const c
 
 	submenu.ExitBackButton = true;
 	submenu.Display(client, -1);
+
+	delete db;
 }
 
 public int WRCP_StageMenu_Handler(Menu menu, MenuAction action, int param1, int param2)

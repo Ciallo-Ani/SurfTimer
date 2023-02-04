@@ -202,7 +202,9 @@ int CreateReplayEntity(int track, int style, float delay, int client, int bot, i
 
 			if (type == Replay_Dynamic && !ignorelimit)
 			{
-				++gI_DynamicBots;
+				gI_DynamicBots++;
+
+				CreateTimer(0.2, Timer_CheckDynamicBot, GetClientSerial(bot));
 			}
 		}
 	}
@@ -221,4 +223,20 @@ int CreateReplayEntity(int track, int style, float delay, int client, int bot, i
 	}
 
 	return bot;
+}
+
+
+
+// ======[ PRIVATE]=======
+
+static Action Timer_CheckDynamicBot(Handle timer, any serial)
+{
+	int bot = GetClientFromSerial(serial);
+
+	if (!IsValidClient(bot) || !IsFakeClient(bot))
+	{
+		gI_DynamicBots--;
+	}
+
+	return Plugin_Stop;
 }

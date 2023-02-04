@@ -9,7 +9,7 @@ public Action Command_Playtime(int client, int args)
 	FormatEx(sQuery, sizeof(sQuery), mysql_top_playtime, GetSteamAccountID(client));
 	gH_SQL.Query(SQL_TopPlaytime_Callback, sQuery, GetClientSerial(client), DBPrio_Normal);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public void SQL_TopPlaytime_Callback(Database db, DBResultSet results, const char[] error, any data)

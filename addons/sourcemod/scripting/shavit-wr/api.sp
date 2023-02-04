@@ -2,7 +2,6 @@ static GlobalForward H_OnWorldRecord = null;
 static GlobalForward H_OnFinish_Post = null;
 static GlobalForward H_OnWRDeleted = null;
 static GlobalForward H_OnWorstRecord = null;
-static GlobalForward H_OnFinishMessage = null;
 static GlobalForward H_OnWorldRecordsCached = null;
 
 
@@ -217,10 +216,9 @@ public int Native_DeleteWR(Handle handle, int numParams)
 void CreateGlobalForwards()
 {
 	H_OnWorldRecord = new GlobalForward("Shavit_OnWorldRecord", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
-	H_OnFinish_Post = new GlobalForward("Shavit_OnFinish_Post", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
+	H_OnFinish_Post = new GlobalForward("Shavit_OnFinish_Post", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
 	H_OnWRDeleted = new GlobalForward("Shavit_OnWRDeleted", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_String);
 	H_OnWorstRecord = new GlobalForward("Shavit_OnWorstRecord", ET_Ignore, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
-	H_OnFinishMessage = new GlobalForward("Shavit_OnFinishMessage", ET_Event, Param_Cell, Param_CellByRef, Param_Array, Param_Cell, Param_Cell, Param_String, Param_Cell, Param_String, Param_Cell);
 	H_OnWorldRecordsCached = new GlobalForward("Shavit_OnWorldRecordsCached", ET_Ignore);
 }
 
@@ -242,7 +240,7 @@ void Call_OnWorldRecord(int client, int style, float time, int jumps, int strafe
 	Call_Finish();
 }
 
-void Call_OnFinish_Post(int client, int style, float time, int jumps, int strafes, float sync, int rank, int overwrite, int track, float oldtime, float avgvel, float maxvel, int timestamp)
+void Call_OnFinish_Post(int client, int style, float time, int jumps, int strafes, float sync, int rank, int overwrite, int track, float oldtime, float oldwr, float avgvel, float maxvel, int timestamp)
 {
 	Call_StartForward(H_OnFinish_Post);
 	Call_PushCell(client);
@@ -255,6 +253,7 @@ void Call_OnFinish_Post(int client, int style, float time, int jumps, int strafe
 	Call_PushCell(overwrite);
 	Call_PushCell(track);
 	Call_PushCell(oldtime);
+	Call_PushCell(oldwr);
 	Call_PushCell(avgvel);
 	Call_PushCell(maxvel);
 	Call_PushCell(timestamp);
@@ -287,21 +286,6 @@ void Call_OnWorstRecord(int client, int style, float time, int jumps, int strafe
 	Call_PushCell(maxvel);
 	Call_PushCell(timestamp);
 	Call_Finish();
-}
-
-void Call_OnFinishMessage(int client, bool &everyone, timer_snapshot_t snapshot, int overwrite, int rank, char[] message, int maxlen, char[] message2, int maxlen2, Action &result)
-{
-	Call_StartForward(H_OnFinishMessage);
-	Call_PushCell(client);
-	Call_PushCellRef(everyone);
-	Call_PushArrayEx(snapshot, sizeof(timer_snapshot_t), SM_PARAM_COPYBACK);
-	Call_PushCell(overwrite);
-	Call_PushCell(rank);
-	Call_PushStringEx(message, maxlen, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
-	Call_PushCell(maxlen);
-	Call_PushStringEx(message2, maxlen2, SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
-	Call_PushCell(maxlen2);
-	Call_Finish(result);
 }
 
 void Call_OnWorldRecordsCached()

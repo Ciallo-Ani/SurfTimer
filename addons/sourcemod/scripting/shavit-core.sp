@@ -149,7 +149,6 @@ bool gB_Late = false;
 Convar gCV_Restart = null;
 Convar gCV_Pause = null;
 Convar gCV_PauseMovement = null;
-Convar gCV_VelocityTeleport = null;
 Convar gCV_DefaultStyle = null;
 Convar gCV_NoChatSound = null;
 Convar gCV_SimplerLadders = null;
@@ -205,6 +204,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Shavit_GetClientJumps", Native_GetClientJumps);
 	CreateNative("Shavit_GetClientTime", Native_GetClientTime);
 	CreateNative("Shavit_GetClientTrack", Native_GetClientTrack);
+	CreateNative("Shavit_SetClientTrack", Native_SetClientTrack);
 	CreateNative("Shavit_GetDatabase", Native_GetDatabase);
 	CreateNative("Shavit_GetOrderedStyles", Native_GetOrderedStyles);
 	CreateNative("Shavit_GetStrafeCount", Native_GetStrafeCount);
@@ -241,6 +241,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("Shavit_StopTimer", Native_StopTimer);
 	CreateNative("Shavit_GetClientTimescale", Native_GetClientTimescale);
 	CreateNative("Shavit_SetClientTimescale", Native_SetClientTimescale);
+	CreateNative("Shavit_GetClientSpeed", Native_GetClientSpeed);
+	CreateNative("Shavit_SetClientSpeed", Native_SetClientSpeed);
 	CreateNative("Shavit_GetAvgVelocity", Native_GetAvgVelocity);
 	CreateNative("Shavit_GetMaxVelocity", Native_GetMaxVelocity);
 	CreateNative("Shavit_SetAvgVelocity", Native_SetAvgVelocity);
@@ -374,7 +376,6 @@ public void OnPluginStart()
 	gCV_Restart = new Convar("shavit_core_restart", "1", "Allow commands that restart the timer?", 0, true, 0.0, true, 1.0);
 	gCV_Pause = new Convar("shavit_core_pause", "1", "Allow pausing?", 0, true, 0.0, true, 1.0);
 	gCV_PauseMovement = new Convar("shavit_core_pause_movement", "1", "Allow movement/noclip while paused?", 0, true, 0.0, true, 1.0);
-	gCV_VelocityTeleport = new Convar("shavit_core_velocityteleport", "0", "Teleport the client when changing its velocity? (for special styles)", 0, true, 0.0, true, 1.0);
 	gCV_DefaultStyle = new Convar("shavit_core_defaultstyle", "0", "Default style ID.\nAdd the '!' prefix to disable style cookies - i.e. \"!3\" to *force* scroll to be the default style.", 0, true, 0.0);
 	gCV_NoChatSound = new Convar("shavit_core_nochatsound", "0", "Disables click sound for chat messages.", 0, true, 0.0, true, 1.0);
 	gCV_SimplerLadders = new Convar("shavit_core_simplerladders", "1", "Allows using all keys on limited styles (such as sideways) after touching ladders\nTouching the ground enables the restriction again.", 0, true, 0.0, true, 1.0);
@@ -531,7 +532,7 @@ public Action Command_StartTimer(int client, int args)
 {
 	if(!IsValidClient(client))
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	char sCommand[16];
@@ -544,7 +545,7 @@ public Action Command_StartTimer(int client, int args)
 			Shavit_PrintToChat(client, "%T", "CommandDisabled", client, sCommand);
 		}
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	int track = Track_Main;
@@ -593,14 +594,14 @@ public Action Command_StartTimer(int client, int args)
 	Call_PushCell(track);
 	Call_Finish();
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_TeleportEnd(int client, int args)
 {
 	if(!IsValidClient(client))
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	char sCommand[16];
@@ -632,47 +633,49 @@ public Action Command_TeleportEnd(int client, int args)
 	Call_PushCell(track);
 	Call_Finish();
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_StopTimer(int client, int args)
 {
 	if(!IsValidClient(client))
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
+
+	DumbSetVelocity(client, view_as<float>({0.0, 0.0, 0.0}));
 
 	Shavit_StopTimer(client, false);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_TogglePause(int client, int args)
 {
 	if(!(1 <= client <= MaxClients) || !IsClientInGame(client))
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	int iFlags = Shavit_CanPause(client);
 
 	if((iFlags & CPR_NoTimer) > 0)
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	if((iFlags & CPR_InStartZone) > 0)
 	{
 		Shavit_PrintToChat(client, "%T", "PauseStartZone", client);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	if((iFlags & CPR_InEndZone) > 0)
 	{
 		Shavit_PrintToChat(client, "%T", "PauseEndZone", client);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	if((iFlags & CPR_ByConVar) > 0)
@@ -682,7 +685,7 @@ public Action Command_TogglePause(int client, int args)
 
 		Shavit_PrintToChat(client, "%T", "CommandDisabled", client, sCommand);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	if (gA_Timers[client].bClientPaused)
@@ -691,7 +694,7 @@ public Action Command_TogglePause(int client, int args)
 		{
 			Shavit_PrintToChat(client, "%T", "BlockNoclipResume", client);
 
-			return Plugin_Handled;
+			return Plugin_Continue;
 		}
 
 		ResumePauseMovement(client);
@@ -707,21 +710,21 @@ public Action Command_TogglePause(int client, int args)
 		{
 			Shavit_PrintToChat(client, "%T", "PauseNotOnGround", client);
 
-			return Plugin_Handled;
+			return Plugin_Continue;
 		}
 
 		if((iFlags & CPR_Moving) > 0)
 		{
 			Shavit_PrintToChat(client, "%T", "PauseMoving", client);
 
-			return Plugin_Handled;
+			return Plugin_Continue;
 		}
 
 		if((iFlags & CPR_Duck) > 0)
 		{
 			Shavit_PrintToChat(client, "%T", "PauseDuck", client);
 
-			return Plugin_Handled;
+			return Plugin_Continue;
 		}
 
 		GetPauseMovement(client);
@@ -731,7 +734,7 @@ public Action Command_TogglePause(int client, int args)
 		Shavit_PrintToChat(client, "%T", "MessagePause", client);
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_DeleteMap(int client, int args)
@@ -740,7 +743,7 @@ public Action Command_DeleteMap(int client, int args)
 	{
 		ReplyToCommand(client, "Usage: sm_deletemap <map>\nOnce a map is chosen, \"sm_deletemap confirm\" to run the deletion.");
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	char sArgs[PLATFORM_MAX_PATH];
@@ -763,7 +766,7 @@ public Action Command_DeleteMap(int client, int args)
 		ReplyToCommand(client, "Map to delete is now %s.\nRun \"sm_deletemap confirm\" to delete all data regarding the map %s.", gS_DeleteMap[client], gS_DeleteMap[client]);
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_Migration(int client, int args)
@@ -772,7 +775,7 @@ public Action Command_Migration(int client, int args)
 	{
 		ReplyToCommand(client, "Usage: sm_migration <migration id or \"all\" to run all migrationsd>.");
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	char sArg[16];
@@ -807,7 +810,7 @@ public Action Command_Migration(int client, int args)
 		}
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_WipePlayer(int client, int args)
@@ -816,7 +819,7 @@ public Action Command_WipePlayer(int client, int args)
 	{
 		ReplyToCommand(client, "Usage: sm_wipeplayer <steamid3>\nAfter entering a SteamID, you will be prompted with a verification captcha.");
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	char sArgString[32];
@@ -830,7 +833,7 @@ public Action Command_WipePlayer(int client, int args)
 		{
 			Shavit_PrintToChat(client, "Entered SteamID (%s) is invalid. The range for valid SteamIDs is [U:1:1] to [U:1:2147483647].", sArgString);
 
-			return Plugin_Handled;
+			return Plugin_Continue;
 		}
 
 		char sAlphabet[] = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#";
@@ -855,7 +858,7 @@ public Action Command_WipePlayer(int client, int args)
 		gI_WipePlayerID[client] = -1;
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public void Trans_DeleteRestOfUserSuccess(Database db, DataPack hPack, int numQueries, DBResultSet[] results, any[] queryData)
@@ -914,7 +917,7 @@ public Action Command_Style(int client, int args)
 {
 	if(!IsValidClient(client))
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	Menu menu = new Menu(StyleMenu_Handler);
@@ -995,7 +998,7 @@ public Action Command_Style(int client, int args)
 	menu.ExitButton = true;
 	menu.Display(client, MENU_TIME_FOREVER);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public int StyleMenu_Handler(Menu menu, MenuAction action, int param1, int param2)
@@ -1162,82 +1165,6 @@ void DoJump(int client)
 	}
 
 	SetEntPropFloat(client, Prop_Send, "m_flStamina", 0.0);
-
-	RequestFrame(VelocityChanges, GetClientSerial(client));
-}
-
-void VelocityChanges(int data)
-{
-	int client = GetClientFromSerial(data);
-
-	if(client == 0)
-	{
-		return;
-	}
-
-	int style = gA_Timers[client].bsStyle;
-
-	if(GetStyleSettingBool(style, "force_timescale"))
-	{
-		float mod = gA_Timers[client].fTimescale * GetStyleSettingFloat(gA_Timers[client].bsStyle, "speed");
-		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", mod);
-	}
-
-	float fAbsVelocity[3];
-	GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", fAbsVelocity);
-
-	float fSpeed = (SquareRoot(Pow(fAbsVelocity[0], 2.0) + Pow(fAbsVelocity[1], 2.0)));
-
-	if(fSpeed != 0.0)
-	{
-		float fVelocityMultiplier = GetStyleSettingFloat(style, "velocity");
-		float fVelocityBonus = GetStyleSettingFloat(style, "bonus_velocity");
-		float fMin = GetStyleSettingFloat(style, "min_velocity");
-
-		if(fVelocityMultiplier != 0.0)
-		{
-			fAbsVelocity[0] *= fVelocityMultiplier;
-			fAbsVelocity[1] *= fVelocityMultiplier;
-		}
-
-		if(fVelocityBonus != 0.0)
-		{
-			float x = fSpeed / (fSpeed + fVelocityBonus);
-			fAbsVelocity[0] /= x;
-			fAbsVelocity[1] /= x;
-		}
-
-		if(fMin != 0.0 && fSpeed < fMin)
-		{
-			float x = (fSpeed / fMin);
-			fAbsVelocity[0] /= x;
-			fAbsVelocity[1] /= x;
-		}
-	}
-
-	float fJumpMultiplier = GetStyleSettingFloat(style, "jump_multiplier");
-	float fJumpBonus = GetStyleSettingFloat(style, "jump_bonus");
-
-	if(fJumpMultiplier != 0.0)
-	{
-		fAbsVelocity[2] *= fJumpMultiplier;
-	}
-
-	if(fJumpBonus != 0.0)
-	{
-		fAbsVelocity[2] += fJumpBonus;
-	}
-
-
-	if(!gCV_VelocityTeleport.BoolValue)
-	{
-		SetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", fAbsVelocity);
-	}
-
-	else
-	{
-		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, fAbsVelocity);
-	}
 }
 
 public void Player_Death(Event event, const char[] name, bool dontBroadcast)
@@ -1266,6 +1193,26 @@ public any Native_GetClientTime(Handle handler, int numParams)
 public int Native_GetClientTrack(Handle handler, int numParams)
 {
 	return gA_Timers[GetNativeCell(1)].iTimerTrack;
+}
+
+public int Native_SetClientTrack(Handle handler, int numParams)
+{
+	int client = GetNativeCell(1);
+
+	if (!IsValidClient(client))
+	{
+		return false;
+	}
+
+	int track = GetNativeCell(2);
+	if (track < Track_Main || track >= TRACK_LIMIT)
+	{
+		return false;
+	}
+
+	gA_Timers[client].iTimerTrack = track;
+
+	return true;
 }
 
 public int Native_GetClientJumps(Handle handler, int numParams)
@@ -1557,7 +1504,7 @@ public int SemiNative_PrintToChat(int client, int formatParam)
 {
 	int iWritten;
 	char sBuffer[256];
-	char sInput[300];
+	char sInput[512];
 	FormatNativeString(0, formatParam, formatParam+1, sizeof(sInput), iWritten, sInput);
 
 	char sTime[50];
@@ -1577,7 +1524,7 @@ public int SemiNative_PrintToChat(int client, int formatParam)
 
 	ReplaceColors(sPrefix, sizeof(sPrefix));
 	ReplaceColors(sText, sizeof(sText));
-	ReplaceColors(sInput, 300);
+	ReplaceColors(sInput, sizeof(sInput));
 	FormatEx(sBuffer, (gB_Protobuf ? sizeof(sBuffer) : 253), "%s%s%s %s%s", (gB_Protobuf ? " ":""), sTime, sPrefix, sText, sInput);
 
 	if(client == 0)
@@ -1855,6 +1802,32 @@ public int Native_SetClientTimescale(Handle handler, int numParams)
 	return 0;
 }
 
+public any Native_GetClientSpeed(Handle handler, int numParams)
+{
+	int client = GetNativeCell(1);
+	return gA_Timers[client].fplayer_speedmod;
+}
+
+public any Native_SetClientSpeed(Handle handler, int numParams)
+{
+	int client = GetNativeCell(1);
+	float speed = GetNativeCell(2);
+
+	speed = float(RoundFloat((speed * 10000.0)))/10000.0;
+
+	if (speed != gA_Timers[client].fplayer_speedmod && speed > 0.0)
+	{
+		gA_Timers[client].fplayer_speedmod = speed;
+		UpdateLaggedMovement(client, true);
+	}
+	else
+	{
+		return false;
+	}
+
+	return true;
+}
+
 public int Native_GetStyleSetting(Handle handler, int numParams)
 {
 	int style = GetNativeCell(1);
@@ -2113,13 +2086,13 @@ public Action Shavit_OnStartPre(int client, int track)
 
 TimerStatus GetTimerStatus(int client)
 {
-	if (!gA_Timers[client].bTimerEnabled)
-	{
-		return Timer_Stopped;
-	}
-	else if (gA_Timers[client].bClientPaused)
+	if (gA_Timers[client].bClientPaused)
 	{
 		return Timer_Paused;
+	}
+	else if (!gA_Timers[client].bTimerEnabled)
+	{
+		return Timer_Stopped;
 	}
 
 	return Timer_Running;
@@ -2194,6 +2167,8 @@ void StopTimer(int client)
 	gA_Timers[client].iStrafes = 0;
 	gA_Timers[client].iTotalMeasures = 0;
 	gA_Timers[client].iGoodGains = 0;
+
+	SetEntityMoveType(client, MOVETYPE_WALK);
 }
 
 void PauseTimer(int client)

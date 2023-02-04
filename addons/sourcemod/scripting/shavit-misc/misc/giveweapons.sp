@@ -44,19 +44,19 @@ public Action Command_Weapon(int client, int args)
 	{
 		Shavit_PrintToChat(client, "%T", "CommandDisabled", client);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	if(!IsPlayerAlive(client))
 	{
 		Shavit_PrintToChat(client, "%T", "WeaponAlive", client);
 
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	if (GetGameTickCount() - gI_LastWeaponTick[client] < 10)
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	gI_LastWeaponTick[client] = GetGameTickCount();
@@ -97,7 +97,7 @@ public Action Command_Weapon(int client, int args)
 		SetWeaponAmmo(client, iWeapon, false);
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 

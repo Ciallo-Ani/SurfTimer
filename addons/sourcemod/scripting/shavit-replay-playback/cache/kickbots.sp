@@ -7,7 +7,7 @@ void KickReplay(bot_info_t info)
 
 	if (info.iType == Replay_Dynamic && !info.bIgnoreLimit)
 	{
-		--gI_DynamicBots;
+		gI_DynamicBots--;
 	}
 
 	if (1 <= info.iEnt <= MaxClients)

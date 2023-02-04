@@ -395,4 +395,17 @@
 		"en"		"You {darkred}can't{default} teleport as an end zone for the map is not defined."
 		"chi"		"您{darkred}无法{default}传送，因为地图未设置结束区域"
 	}
+	// --------- tier ---------- //
+	"CurrentTier"
+	{
+		"#format"	"{1:s},{2:d}"
+		"en"		"{gold}{1}{default} is tier {orchid}{2}{default}."
+		"chi"		"当前地图{gold}{1}{default} 难度 {orchid}{2}{default}."
+	}
+	"SetTier"
+	{
+		"#format"	"{1:d}"
+		"en"		"Tier changed to {orchid}{1}{default}."
+		"chi"		"难度已更改为 {orchid}{1}{default}."
+	}
 }

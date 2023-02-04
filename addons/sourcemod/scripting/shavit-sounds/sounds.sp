@@ -206,7 +206,7 @@ static void PlayEventSound(int client, bool everyone, char sound[PLATFORM_MAX_PA
 
 	for(int i = 1; i <= MaxClients; i++)
 	{
-		if(!IsValidClient(i) || (gB_HUD && (Shavit_GetHUDSettings(i) & HUD_NOSOUNDS) > 0))
+		if(!IsValidClient(i) || Shavit_GetHUDSettings(i) & HUD_NOSOUNDS)
 		{
 			continue;
 		}
@@ -227,6 +227,6 @@ static void PlayEventSound(int client, bool everyone, char sound[PLATFORM_MAX_PA
 
 	if(count > 0)
 	{
-		EmitSound(clients, count, sound);
+		EmitSound(clients, count, sound, _, _, _, _, 0.5); /* half volume */
 	}
 }

@@ -43,7 +43,7 @@ public Action Command_WRCP(int client, int args)
 
 	OpenWRCPMenu(client);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_DeleteWRCP(int client, int args)
@@ -57,7 +57,7 @@ public Action Command_DeleteWRCP(int client, int args)
 
 	OpenWRCPMenu(client);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_Maptop(int client, int args)
@@ -75,7 +75,7 @@ public Action Command_Maptop(int client, int args)
 		{
 			Shavit_PrintToChat(client, "This is a linear map");
 
-			return Plugin_Handled;
+			return Plugin_Continue;
 		}
 
 		OpenMaptopMenu(client, gS_Map);
@@ -88,7 +88,7 @@ public Action Command_Maptop(int client, int args)
 		OpenMaptopMenu(client, sMap);
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_DeleteMaptop(int client, int args)
@@ -106,7 +106,7 @@ public Action Command_DeleteMaptop(int client, int args)
 		{
 			Shavit_PrintToChat(client, "This is a linear map");
 
-			return Plugin_Handled;
+			return Plugin_Continue;
 		}
 
 		OpenMaptopMenu(client, gS_Map);
@@ -118,7 +118,7 @@ public Action Command_DeleteMaptop(int client, int args)
 		OpenMaptopMenu(client, sMap);
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_CPR(int client, int args)
@@ -156,7 +156,7 @@ public Action Command_CPR(int client, int args)
 		delete sRegex;
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_CCP(int client, int args)
@@ -168,5 +168,5 @@ public Action Command_CCP(int client, int args)
 
 	Shavit_PrintToChat(client, "this feature haven't done yet");
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }

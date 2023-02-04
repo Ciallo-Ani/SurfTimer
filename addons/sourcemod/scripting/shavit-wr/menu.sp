@@ -281,13 +281,12 @@ public void GetRecordDetails_Callback(Database db, DBResultSet results, const ch
 
 		float fTime = results.FetchFloat(3);
 		float fSync = results.FetchFloat(4);
-		float fPerfectJumps = results.FetchFloat(5);
 
-		int iJumps = results.FetchInt(6);
-		int iStrafes = results.FetchInt(7);
-		int iRecordID = results.FetchInt(8);
-		int iTimestamp = results.FetchInt(9);
-		int iWRRecordID = results.FetchInt(10);
+		int iJumps = results.FetchInt(5);
+		int iStrafes = results.FetchInt(6);
+		int iRecordID = results.FetchInt(7);
+		int iTimestamp = results.FetchInt(8);
+		int iWRRecordID = results.FetchInt(9);
 
 		int iStyle = gA_WRCache[client].iLastStyle;
 		int iTrack = gA_WRCache[client].iLastTrack;
@@ -300,7 +299,6 @@ public void GetRecordDetails_Callback(Database db, DBResultSet results, const ch
 		hPack.WriteString(sMap);
 		hPack.WriteCell(fTime);
 		hPack.WriteCell(fSync);
-		hPack.WriteCell(fPerfectJumps);
 		hPack.WriteCell(iJumps);
 		hPack.WriteCell(iStrafes);
 		hPack.WriteCell(iRecordID);
@@ -332,7 +330,6 @@ public void DeleteConfirm_Callback(Database db, DBResultSet results, const char[
 
 	float fTime = view_as<float>(hPack.ReadCell());
 	float fSync = view_as<float>(hPack.ReadCell());
-	float fPerfectJumps = view_as<float>(hPack.ReadCell());
 
 	int iJumps = hPack.ReadCell();
 	int iStrafes = hPack.ReadCell();
@@ -376,8 +373,8 @@ public void DeleteConfirm_Callback(Database db, DBResultSet results, const char[
 	FormatTime(sDate, 32, "%Y-%m-%d %H:%M:%S", iTimestamp);
 
 	// above the client == 0 so log doesn't get lost if admin disconnects between deleting record and query execution
-	Shavit_LogMessage("%L - deleted record. Runner: %s ([U:1:%d]) | Map: %s | Style: %s | Track: %s | Time: %.2f (%s) | Strafes: %d (%.1f%%) | Jumps: %d (%.1f%%) | Run date: %s | Record ID: %d",
-		client, sName, iSteamID, sMap, gS_StyleStrings[iStyle].sStyleName, sTrack, fTime, (bWRDeleted)? "WR":"not WR", iStrafes, fSync, iJumps, fPerfectJumps, sDate, iRecordID);
+	Shavit_LogMessage("%L - deleted record. Runner: %s ([U:1:%d]) | Map: %s | Style: %s | Track: %s | Time: %.2f (%s) | Strafes: %d (%.1f%%) | Jumps: %d | Run date: %s | Record ID: %d",
+		client, sName, iSteamID, sMap, gS_StyleStrings[iStyle].sStyleName, sTrack, fTime, (bWRDeleted)? "WR":"not WR", iStrafes, fSync, iJumps, sDate, iRecordID);
 
 	if(client == 0)
 	{
@@ -964,14 +961,6 @@ public void SQL_SubMenu_Callback(Database db, DBResultSet results, const char[] 
 		hMenu.AddItem("-1", sDisplay);
 
 		results.FetchString(6, sMap, sizeof(sMap));
-
-		float fPoints = results.FetchFloat(9);
-
-		if(gB_Rankings && fPoints > 0.0)
-		{
-			FormatEx(sDisplay, 128, "%T: %.03f", "WRPointsCap", client, fPoints);
-			hMenu.AddItem("-1", sDisplay);
-		}
 
 		iSteamID = results.FetchInt(4);
 

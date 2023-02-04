@@ -2,7 +2,6 @@
 
 void RegisterCookies()
 {
-	RegisterCookie_Hide();
 	RegisterCookie_Advs();
 }
 
@@ -28,6 +27,4 @@ public void OnClientCookiesCached(int client)
 	{
 		return;
 	}
-
-	OnClientCookiesCached_Hide(client);
 }

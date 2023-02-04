@@ -112,7 +112,9 @@ bot_info_t gA_BotInfo[MAXPLAYERS+1];
 
 // hooks and sdkcall stuff
 Handle gH_BotAddCommand = INVALID_HANDLE;
-Handle gH_DoAnimationEvent = INVALID_HANDLE ;
+Handle gH_DoAnimationEvent = INVALID_HANDLE;
+Handle gH_SetMaxClients = INVALID_HANDLE;
+DynamicDetour gH_TeamFull = null;
 DynamicDetour gH_MaintainBotQuota = null;
 int gI_WEAPONTYPE_UNKNOWN = 123123123;
 int gI_LatestClient = -1;
@@ -137,6 +139,7 @@ Convar gCV_DynamicTimeSearch = null;
 Convar gCV_DynamicTimeCheap = null;
 Convar gCV_DynamicTimeTick = null;
 Convar gCV_EnableDynamicTimeDifference = null;
+ConVar gCV_StagePlaybackPreRunTime = null;
 ConVar sv_duplicate_playernames_ok = null;
 ConVar bot_join_after_player = null;
 ConVar mp_randomspawn = null;
@@ -241,6 +244,10 @@ public void OnLibraryAdded(const char[] name)
 	{
 		gB_ClosestPos = true;
 	}
+	else if (strcmp(name, "shavit-replay-recorder") == 0)
+	{
+		gCV_StagePlaybackPreRunTime = FindConVar("shavit_stage_replay_preruntime");
+	}
 }
 
 public void OnLibraryRemoved(const char[] name)
@@ -273,12 +280,6 @@ public void OnAllPluginsLoaded()
 public void OnPluginEnd()
 {
 	KickAllReplays();
-}
-
-// Stops bot_quota from doing anything.
-public MRESReturn Detour_MaintainBotQuota(int pThis)
-{
-	return MRES_Supercede;
 }
 
 public void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
@@ -360,6 +361,11 @@ public void AdminMenu_DeleteReplay(Handle topmenu, TopMenuAction action, TopMenu
 
 public Action Timer_Cron(Handle Timer)
 {
+	if (!gCV_Enabled.BoolValue)
+	{
+		return Plugin_Continue;
+	}
+
 	int valid = 0;
 
 	for (int i = 1; i <= MaxClients; i++)
@@ -396,12 +402,11 @@ public Action Timer_Cron(Handle Timer)
 
 public void OnMapStart()
 {
-	if(!LoadReplayConfigs())
-	{
-		SetFailState("Could not load the replay bots' configuration file. Make sure it exists (addons/sourcemod/configs/shavit-replay.cfg) and follows the proper syntax!");
-	}
-
 	gB_CanUpdateReplayClient = true;
+	gI_CentralBot = -1;
+	gI_TrackBot = -1;
+	gI_StageBot = -1;
+	gI_DynamicBots = 0;
 
 	GetCurrentMap(gS_Map, sizeof(gS_Map));
 	bool bWorkshopWritten = WriteNavMesh(gS_Map); // write "maps/workshop/123123123/bhop_map.nav"
@@ -426,8 +431,6 @@ public void OnMapStart()
 	}
 
 	PrecacheModel("models/props/cs_office/vending_machine.mdl");
-
-	Replay_CreateDirectories(gS_ReplayFolder, gI_Styles);
 
 	for(int i = 0; i < gI_Styles; i++)
 	{
@@ -467,7 +470,14 @@ public void Shavit_OnStyleConfigLoaded(int styles)
 		Shavit_GetStyleStringsStruct(i, gS_StyleStrings[i]);
 	}
 
+	if(!LoadReplayConfigs())
+	{
+		SetFailState("Could not load the replay bots' configuration file. Make sure it exists (addons/sourcemod/configs/shavit-replay.cfg) and follows the proper syntax!");
+	}
+
 	gI_Styles = styles;
+
+	Replay_CreateDirectories(gS_ReplayFolder, gI_Styles);
 }
 
 public void Shavit_OnStyleChanged(int client, int oldstyle, int newstyle, int track, bool manual)
@@ -753,7 +763,7 @@ public void Shavit_OnReplaySaved(int client, int style, float time, int jumps, i
 	}
 
 	//StopOrRestartBots(style, track, false);
-	if(gA_BotInfo[gI_TrackBot].iStatus == Replay_Idle)
+	if(gI_TrackBot != -1 && gA_BotInfo[gI_TrackBot].iStatus == Replay_Idle)
 	{
 		StartReplay(gA_BotInfo[gI_TrackBot], track, style, -1, gCV_ReplayDelay.FloatValue);
 	}
@@ -811,7 +821,7 @@ static void BuildConfigs()
 
 static void CreateConVars()
 {
-	gCV_Enabled = new Convar("shavit_replay_enabled", "1", "Enable replay bot functionality?", 0, true, 0.0, true, 1.0);
+	gCV_Enabled = new Convar("shavit_replay_playback_enabled", "1", "Enable replay bot functionality?", 0, true, 0.0, true, 1.0);
 	gCV_ReplayDelay = new Convar("shavit_replay_delay", "0.25", "Time to wait before restarting the replay after it finishes playing.", 0, true, 0.0, true, 10.0);
 	gCV_DefaultTeam = new Convar("shavit_replay_defaultteam", "3", "Default team to make the bots join, if possible.\n2 - Terrorists/RED\n3 - Counter Terrorists/BLU", 0, true, 2.0, true, 3.0);
 	gCV_CentralBot = new Convar("shavit_replay_centralbot", "0", "Have one central bot instead of one bot per replay.\nTriggered with !replay.\nRestart the map for changes to take effect.\nThe disabled setting is not supported - use at your own risk.\n0 - Disabled\n1 - Enabled", 0, true, 0.0, true, 1.0);
@@ -909,7 +919,7 @@ static bool LoadReplayConfigs()
 		ReplaceString(sFolder, PLATFORM_MAX_PATH, "{SM}/", "");
 		BuildPath(Path_SM, sFolder, PLATFORM_MAX_PATH, "%s", sFolder);
 	}
-	
+
 	strcopy(gS_ReplayFolder, PLATFORM_MAX_PATH, sFolder);
 
 	delete kv;
@@ -978,5 +988,70 @@ static void LoadDHooks()
 
 	gH_DoAnimationEvent = EndPrepSDKCall();
 
+	// CGameServer::SetMaxClients
+	StartPrepSDKCall(SDKCall_Server);
+	if (!PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CGameServer::SetMaxClients"))
+	{
+		SetFailState("failed to get CGameServer::SetMaxClients");
+	}
+
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain); // int number
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain); // bool
+
+	if (!(gH_SetMaxClients = EndPrepSDKCall()))
+	{
+		SetFailState("Unable to prepare SDKCall for CGameServer::SetMaxClients");
+	}
+	else
+	{
+		// set virtual maxplayers to game.
+		// avoid failing to spawn replay bots
+		static int maxs = 64;
+		bool success = SetMaxClients(maxs);
+
+		if (!success)
+		{
+			LogError("set maxclients failed!");
+		}
+	}
+
+
+	// CCSGameRules::TeamFull
+	if (!(gH_TeamFull = new DynamicDetour(Address_Null, CallConv_THISCALL, ReturnType_Bool, ThisPointer_Address)))
+	{
+		SetFailState("Failed to create detour for CCSGameRules::TeamFull");
+	}
+
+	gH_TeamFull.AddParam(HookParamType_Int); // Team ID
+
+	if (!gH_TeamFull.SetFromConf(gamedata, SDKConf_Signature, "CCSGameRules::TeamFull"))
+	{
+		SetFailState("Failed to get address for CCSGameRules::TeamFull");
+	}
+
+	gH_TeamFull.Enable(Hook_Pre, Detour_TeamFull);
+
 	delete gamedata;
+}
+
+// Stops bot_quota from doing anything.
+static MRESReturn Detour_MaintainBotQuota(int pThis)
+{
+	if (!gCV_Enabled.BoolValue)
+	{
+		return MRES_Ignored;
+	}
+
+	return MRES_Supercede;
+}
+
+static MRESReturn Detour_TeamFull(int pThis, DHookReturn hReturn, DHookParam hParams)
+{
+	hReturn.Value = false;
+	return MRES_Supercede;
+}
+
+static bool SetMaxClients(int num)
+{
+	return SDKCall(gH_SetMaxClients, num);
 }

@@ -1,3 +1,5 @@
+#define DISABLED 1
+
 public Action Command_Profile(int client, int args)
 {
 	if(client == 0)
@@ -5,6 +7,10 @@ public Action Command_Profile(int client, int args)
 		return Plugin_Handled;
 	}
 
+#if DISABLED
+	Shavit_PrintToChat(client, "功能已关闭");
+	return Plugin_Handled;
+#else
 	int target = client;
 	int iSteamID = 0;
 
@@ -21,7 +27,7 @@ public Action Command_Profile(int client, int args)
 
 			if (target == -1)
 			{
-				return Plugin_Handled;
+				return Plugin_Continue;
 			}
 		}
 	}
@@ -29,6 +35,8 @@ public Action Command_Profile(int client, int args)
 	gI_TargetSteamID[client] = (iSteamID > 0) ? iSteamID : GetSteamAccountID(target);
 
 	return OpenStatsMenu(client, gI_TargetSteamID[client]);
+#endif
+
 }
 
 Action OpenStatsMenu(int client, int steamid, int style = 0, int item = 0)
@@ -39,33 +47,19 @@ Action OpenStatsMenu(int client, int steamid, int style = 0, int item = 0)
 	// no spam please
 	if(!gB_CanOpenMenu[client])
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	// big ass query, looking for optimizations TODO
 	char sQuery[2048];
 
-	if(gB_Rankings)
-	{
-		FormatEx(sQuery, 2048, mysql_show_stats_with_rankings, 
-			steamid, style, 
-			steamid, style, 
-			steamid, 
-			steamid, 
-			steamid, style, 
-			steamid, style, 
-			steamid, style);
-	}
-	else
-	{
-		FormatEx(sQuery, 2048, mysql_show_stats_no_rankings, 
-			steamid, style, 
-			steamid, style, 
-			steamid, 
-			steamid, style, 
-			steamid, style, 
-			steamid, style);
-	}
+	FormatEx(sQuery, 2048, mysql_show_stats_no_rankings, 
+		steamid, style, 
+		steamid, style, 
+		steamid, 
+		steamid, style, 
+		steamid, style, 
+		steamid, style);
 
 	gB_CanOpenMenu[client] = false;
 
@@ -75,7 +69,7 @@ Action OpenStatsMenu(int client, int steamid, int style = 0, int item = 0)
 
 	gH_SQL.Query(OpenStatsMenuCallback, sQuery, data, DBPrio_Low);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public void OpenStatsMenuCallback(Database db, DBResultSet results, const char[] error, DataPack data)
@@ -127,36 +121,15 @@ public void OpenStatsMenuCallback(Database db, DBResultSet results, const char[]
 		int iBonusTotalMaps = results.FetchInt(7);
 		int iBonusWRs = results.FetchInt(8);
 
-		char sPoints[16];
-		char sRank[16];
-
-		if(gB_Rankings)
-		{
-			results.FetchString(9, sPoints, 16);
-			results.FetchString(10, sRank, 16);
-		}
-
-		float fPlaytime = results.FetchFloat(gB_Rankings ? 11 : 9);
+		float fPlaytime = results.FetchFloat(9);
 		char sPlaytime[16];
 		FormatSeconds(fPlaytime, sPlaytime, sizeof(sPlaytime), false, true, true);
 
-		float fStylePlaytime = results.FetchFloat(gB_Rankings ? 12 : 10);
+		float fStylePlaytime = results.FetchFloat(10);
 		char sStylePlaytime[16];
 		FormatSeconds(fStylePlaytime, sStylePlaytime, sizeof(sStylePlaytime), false, true, true);
 
 		char sRankingString[64];
-
-		if(gB_Rankings)
-		{
-			if(StringToInt(sRank) > 0 && StringToInt(sPoints) > 0)
-			{
-				FormatEx(sRankingString, 64, "\n%T: #%s/%d\n%T: %s", "Rank", client, sRank, Shavit_GetRankedPlayers(), "Points", client, sPoints);
-			}
-			else
-			{
-				FormatEx(sRankingString, 64, "\n%T: %T", "Rank", client, "PointsUnranked", client);
-			}
-		}
 
 		if(iClears > iTotalMaps)
 		{

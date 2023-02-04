@@ -6,7 +6,8 @@
 
 void DB_CacheMaps()
 {
-	gH_SQL.Query(SQL_UpdateMaps_Callback, mysql_update_maps, 0, DBPrio_Low);
+	Database db = GetZonesDatabaseHandle(false);
+	db.Query(SQL_UpdateMaps_Callback, mysql_update_maps, 0, DBPrio_Low);
 }
 
 public void SQL_UpdateMaps_Callback(Database db, DBResultSet results, const char[] error, any data)
@@ -31,4 +32,6 @@ public void SQL_UpdateMaps_Callback(Database db, DBResultSet results, const char
 	}
 
 	SortADTArray(gA_ValidMaps, Sort_Ascending, Sort_String);
+
+	delete db;
 }

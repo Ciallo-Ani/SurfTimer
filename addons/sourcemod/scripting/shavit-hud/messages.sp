@@ -64,7 +64,7 @@ void Shavit_OnWRCP_Message(int client, int style, int stage, int records, float 
 
 	if(oldtime == -1.0)
 	{
-		FormatEx(sDiffTime, sizeof(sDiffTime), "N/A");
+		FormatEx(sDiffTime, sizeof(sDiffTime), "无");
 		FormatEx(sRank, sizeof(sRank), "1/1");
 	}
 	else
@@ -86,7 +86,7 @@ void Shavit_OnFinishStage_Post_Message(int client, int stage, int style, float t
 
 	if(wrcpTime == -1.0)
 	{
-		FormatEx(sWRDifftime, sizeof(sWRDifftime), "N/A");
+		FormatEx(sWRDifftime, sizeof(sWRDifftime), "无");
 	}
 	else
 	{
@@ -100,7 +100,7 @@ void Shavit_OnFinishStage_Post_Message(int client, int stage, int style, float t
 
 	if(diff == time)
 	{
-		FormatEx(sPBDifftime, sizeof(sPBDifftime), "N/A");
+		FormatEx(sPBDifftime, sizeof(sPBDifftime), "无");
 	}
 	else
 	{
@@ -156,8 +156,8 @@ void Shavit_OnFinishCheckpoint_Message(int client, int cpnum, int style, float t
 	char sWRDifftime[32];
 	if(Shavit_GetWRCPTime(cpnum, style) == -1.0)
 	{
-		FormatEx(sWRDifftime, sizeof(sWRDifftime), "N/A");
-		FormatEx(gS_DiffTime[client], sizeof(gS_DiffTime[]), "N/A");
+		FormatEx(sWRDifftime, sizeof(sWRDifftime), "无");
+		FormatEx(gS_DiffTime[client], sizeof(gS_DiffTime[]), "无");
 	}
 	else
 	{
@@ -174,7 +174,7 @@ void Shavit_OnFinishCheckpoint_Message(int client, int cpnum, int style, float t
 	char sPBDifftime[32];
 	if(pbdiff == time)
 	{
-		FormatEx(sPBDifftime, sizeof(sPBDifftime), "N/A");
+		FormatEx(sPBDifftime, sizeof(sPBDifftime), "无");
 	}
 	else
 	{
@@ -213,7 +213,7 @@ public Action Timer_CPTimeMessage(Handle timer, DataPack dp)
 	return Plugin_Stop;
 }
 
-void Shavit_OnLeaveStage_Message(int client, int stage, int style, float leavespeed, bool stagetimer)
+stock void Shavit_OnLeaveStage_Message(int client, int stage, int style, float leavespeed, bool stagetimer)
 {
 	if(stagetimer || Shavit_GetClientTime(client) == 0.0)
 	{
@@ -311,4 +311,93 @@ void Shavit_OnLeaveCheckpointZone_Bot_Message(int bot, float speed)
 	}
 
 	SendMessageToSpectator(bot, "%t", "BotPrestrafe", RoundToFloor(speed), true);
+}
+
+void Shavit_OnFinish_Post_Message(int client, int style, float time, int rank, int overwrite, int track, float oldtime, float oldwr)
+{
+	char sWRDifftime[32];
+	char sPBDifftime[32];
+
+	if(oldwr == 0.0)
+	{
+		FormatEx(sWRDifftime, sizeof(sWRDifftime), "{green}首通{default}");
+	}
+	else
+	{
+		FormatDiffMsg(time - oldwr, sWRDifftime, sizeof(sWRDifftime));
+	}
+
+	if(oldtime == 0.0)
+	{
+		FormatEx(sPBDifftime, sizeof(sPBDifftime), "{green}首通{default}");
+	}
+	else
+	{
+		FormatDiffMsg(time - oldtime, sPBDifftime, sizeof(sPBDifftime));
+	}
+
+	char sMessage[512];
+
+	char sTime[32];
+	FormatSeconds(time, sTime, sizeof(sTime));
+
+	char sTrack[32];
+	GetTrackName(client, track, sTrack, sizeof(sTrack));
+
+	int records = Shavit_GetRecordAmount(style, track);
+
+	SetGlobalTransTarget(client);
+
+	switch(overwrite)
+	{
+		case PB_Insert, PB_Update:
+		{
+			char sRank[32];
+			FormatEx(sRank, sizeof(sRank), "%d/%d", rank, overwrite == PB_Insert ? records + 1 : records);
+			FormatEx(sMessage, sizeof(sMessage), "%t", "MapCompletion", 
+				client, sTrack, sTime, gS_StyleStrings[style].sStyleName, sRank, sWRDifftime, sPBDifftime);
+		}
+		case PB_NoQuery:
+		{
+			FormatEx(sMessage, sizeof(sMessage), "%t", "MapCompletion-Noimproved", 
+				client, sTrack, sTime, gS_StyleStrings[style].sStyleName, sWRDifftime, sPBDifftime);
+		}
+		case PB_UnRanked:
+		{
+			FormatEx(sMessage, sizeof(sMessage), "%t", "MapCompletion-Unranked", 
+				Shavit_IsPracticeMode(client)?"[练习模式]":"[未排名]", 
+				client, sTrack, sTime, gS_StyleStrings[style].sStyleName, sWRDifftime, sPBDifftime);
+		}
+	}
+
+	if(overwrite != PB_UnRanked)
+	{
+		Shavit_PrintToChatAll(sMessage);
+	}
+	else
+	{
+		Shavit_PrintToChat(client, sMessage);
+		SendMessageToSpectator(client, sMessage);
+	}
+
+	RemoveColors(sMessage, sizeof(sMessage));
+	Shavit_LogMessage(sMessage);
+}
+
+static void FormatDiffMsg(float diff, char[] buffer, int len)
+{
+	FormatSeconds(diff, buffer, len);
+
+	if(diff > 0.0)
+	{
+		Format(buffer, len, "{darkred}+%s{default}", buffer);
+	}
+	else if(diff == 0.0)
+	{
+		Format(buffer, len, "{yellow}%s{default}", buffer);
+	}
+	else
+	{
+		Format(buffer, len, "{green}%s{default}", buffer);
+	}
 }

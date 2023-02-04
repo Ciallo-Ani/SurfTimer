@@ -52,11 +52,6 @@ static void UpdateScoreboard(int client)
 	int iScore = (fPB != 0.0 && fPB < 2000)? -RoundToFloor(fPB):-2000;
 
 	CS_SetClientContributionScore(client, iScore);
-
-	if(gB_Rankings)
-	{
-		SetEntProp(client, Prop_Data, "m_iDeaths", Shavit_GetRank(client));
-	}
 }
 
 static void UpdateClanTag(int client)
@@ -95,12 +90,6 @@ static void UpdateClanTag(int client)
 	}
 
 	char sRank[8];
-
-	if(gB_Rankings)
-	{
-		IntToString(Shavit_GetRank(client), sRank, 8);
-	}
-
 	ReplaceString(sCustomTag, 32, "{style}", gS_StyleStrings[Shavit_GetBhopStyle(client)].sStyleName);
 	ReplaceString(sCustomTag, 32, "{styletag}", gS_StyleStrings[Shavit_GetBhopStyle(client)].sClanTag);
 	ReplaceString(sCustomTag, 32, "{time}", sTime);

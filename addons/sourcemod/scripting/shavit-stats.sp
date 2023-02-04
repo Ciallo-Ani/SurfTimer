@@ -25,9 +25,6 @@
 #include <shavit/wr>
 #include <shavit/stats>
 
-#undef REQUIRE_PLUGIN
-#include <shavit/rankings>
-
 #undef REQUIRE_EXTENSIONS
 #include <cstrike>
 
@@ -46,9 +43,6 @@ public Plugin myinfo =
 }
 
 
-
-// modules
-bool gB_Rankings = false;
 
 // database handle
 Database2 gH_SQL = null;
@@ -123,9 +117,6 @@ public void OnPluginStart()
 	RegisterCommands();
 	SQL_DBConnect();
 
-	// modules
-	gB_Rankings = LibraryExists("shavit-rankings");
-
 	if(gB_Late)
 	{
 		Shavit_OnStyleConfigLoaded(Shavit_GetStyleCount());
@@ -168,22 +159,6 @@ public void OnClientDisconnect(int client)
 public void Shavit_OnStyleChanged(int client, int oldstyle, int newstyle, int track, bool manual)
 {
 	OnStyleChanged_ChangePlayTime(client, oldstyle, newstyle);
-}
-
-public void OnLibraryAdded(const char[] name)
-{
-	if(StrEqual(name, "shavit-rankings"))
-	{
-		gB_Rankings = true;
-	}
-}
-
-public void OnLibraryRemoved(const char[] name)
-{
-	if(StrEqual(name, "shavit-rankings"))
-	{
-		gB_Rankings = false;
-	}
 }
 
 

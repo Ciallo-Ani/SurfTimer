@@ -10,7 +10,7 @@ public Action Command_ValidColors(int client, int args)
 {
 	if(!IsValidClient(client))
 	{
-		return Plugin_Handled;
+		return Plugin_Continue;
 	}
 
 	static char sGlobalColorNames[][] =
@@ -43,5 +43,5 @@ public Action Command_ValidColors(int client, int args)
 		Shavit_PrintToChat(client, "%s%s", sCSGOColorNames[i], sCSGOColorNamesDemo[i]);
 	}
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }

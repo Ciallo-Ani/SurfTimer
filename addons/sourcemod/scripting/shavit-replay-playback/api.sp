@@ -233,7 +233,7 @@ public any Native_GetReplayTime(Handle handler, int numParams)
 
 	if(gA_BotInfo[index].iStage != 0)
 	{
-		int preframes = RoundToFloor(FindConVar("shavit_stage_replay_preruntime").FloatValue * gF_Tickrate);
+		int preframes = RoundToFloor(gCV_StagePlaybackPreRunTime.FloatValue * gF_Tickrate);
 
 		if (gA_BotInfo[index].iTick > (gA_BotInfo[index].aCache.iFrameCount - preframes))
 		{

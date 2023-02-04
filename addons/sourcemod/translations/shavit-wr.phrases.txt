@@ -30,67 +30,6 @@
 		"en"		"Records for {1}:\n({2})"
 		"chi"		"{1}的记录：\n({2})"
 	}
-	// ---------- Completion Messages ---------- //
-	"FirstCompletion-Normal"
-	{
-		"#format"	"{1:N},{2:s},{3:s},{4:d},{5:d}"
-		"en"		"{orchid}{1}{default} finished ({grey}{2}{default}) in {orchid}{3}{default} ({gold}#{5}{default})."
-		"chi"		"{team}{1}{default} 完成了 [{darkblue}{2}{default}] 时间: {orchid}{3}{default} 排名: {blue}{4}/{5}{default}."
-	}
-	"FirstCompletion-Other"
-	{
-		"#format"	"{1:N},{2:s},{3:s},{4:s},{5:d},{6:d}"
-		"en"		"{orchid}{1}{default} finished ({grey}{2}{default}) in {orchid}{3}{default} ({gold}#{5}{default})."
-		"chi"		"{team}{1}{default} 完成了 [{darkblue}{2}{default}] 时间: {orchid}{3}{default} 模式: {grey}{4}{default} 排名: {blue}{5}/{6}{default}."
-	}
-	"NotFirstCompletion-Normal"
-	{
-		"#format"	"{1:N},{2:s},{3:s},{4:d},{5:d},{6:s}"
-		"en"		"{orchid}{1}{default} finished ({grey}{2}{default}) in {orchid}{3}{default} ({gold}#{4}{default}) (#{5})"
-		"chi"		"{team}{1}{default} 完成了 [{darkblue}{2}{default}] 时间: {orchid}{3}{default} ({green}-{6}{default}) 排名: {blue}{4}/{5}{default}."
-	}
-	"NotFirstCompletion-Other"
-	{
-		"#format"	"{1:N},{2:s},{3:s},{4:s},{5:d},{6:d},{7:s}"
-		"en"		"{orchid}{1}{default} finished ({grey}{2}{default}) in {orchid}{3}{default} ({gold}#{4}{default}) (#{5})"
-		"chi"		"{team}{1}{default} 完成了 [{darkblue}{2}{default}] 时间: {orchid}{3}{default} ({green}-{7}{default}) 模式: {grey}{4}{default} 排名: {blue}{5}/{6}{default}."
-	}
-	"NotFirstCompletionWorse-Normal"
-	{
-		"#format"	"{1:N},{2:s},{3:s},{4:d},{5:d},{6:s}"
-		"en"		"{orchid}{1}{default} finished ({grey}{2}{default}) in {orchid}{3}{default} ({gold}#{4}{default}) (+{5})"
-		"chi"		"{team}{1}{default} 完成了 [{darkblue}{2}{default}] 时间: {orchid}{3}{default} ({darkred}+{6}{default}) 排名: {blue}{4}/{5}{default}."
-	}
-	"NotFirstCompletionWorse-Other"
-	{
-		"#format"	"{1:N},{2:s},{3:s},{4:s},{5:d},{6:d},{7:s}"
-		"en"		"{orchid}{1}{default} finished ({grey}{2}{default}) in {orchid}{3}{default} ({gold}#{4}{default}) (+{5})"
-		"chi"		"{team}{1}{default} 完成了 [{darkblue}{2}{default}] 时间: {orchid}{3}{default} ({darkred}+{7}{default}) 模式: {grey}{4}{default} 排名: {blue}{5}/{6}{default}."
-	}
-	"WorseTime-Normal"
-	{
-		"#format"	"{1:N},{2:s},{3:s},{4:s}"
-		"en"		"{1} have finished ({grey}{2}{default}) in {orchid}{3}{default} ({4})(+{5})"
-		"chi"		"{team}{1}{default} 完成了 [{darkblue}{2}{default}] 时间: {orchid}{3}{default} ({darkred}+{4}{default})."
-	}
-	"WorseTime-Other"
-	{
-		"#format"	"{1:N},{2:s},{3:s},{4:s},{5:s}"
-		"en"		"{1} have finished ({grey}{2}{default}) in {orchid}{3}{default} ({4})(+{5})"
-		"chi"		"{team}{1}{default} 完成了 [{darkblue}{2}{default}] 时间: {orchid}{3}{default} ({darkred}+{5}{default}) 模式: {grey}{4}{default}."
-	}
-	"UnrankedTime-Normal"
-	{
-		"#format"	"{1:N},{2:s},{3:s},{4:s}"
-		"en"		"{1} have finished ({grey}{2}{default}) in {orchid}{3}{default}."
-		"chi"		"{darkred}{4}{default} {team}{1}{default} 完成了 [{darkblue}{2}{default}] 时间: {orchid}{3}{default}."
-	}
-	"UnrankedTime-Other"
-	{
-		"#format"	"{1:N},{2:s},{3:s},{4:s},{5:s}"
-		"en"		"{1} have finished ({grey}{2}{default}) in {orchid}{3}{default}."
-		"chi"		"{darkred}{5}{default} {team}{1}{default} 完成了 [{darkblue}{2}{default}] 时间: {orchid}{3}{default} 模式: {grey}{4}{default}."
-	}
 	// ---------- Deletion Menus ---------- //
 	"DeleteAllRecords"
 	{

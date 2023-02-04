@@ -10,38 +10,11 @@ void ShowHUDMenu(int client, int item)
 
 	char sInfo[16];
 	char sHudItem[64];
-	FormatEx(sInfo, 16, "!%d", HUD_MASTER);
-	FormatEx(sHudItem, 64, "%T", "HudMaster", client);
-	menu.AddItem(sInfo, sHudItem);
 
-	FormatEx(sInfo, 16, "!%d", HUD_CENTER);
-	FormatEx(sHudItem, 64, "%T", "HudCenter", client);
-	menu.AddItem(sInfo, sHudItem);
-
-	FormatEx(sInfo, 16, "!%d", HUD_OBSERVE);
-	FormatEx(sHudItem, 64, "%T", "HudObserve", client);
-	menu.AddItem(sInfo, sHudItem);
-
-	FormatEx(sInfo, 16, "!%d", HUD_SPECTATORS);
-	FormatEx(sHudItem, 64, "%T", "HudSpectators", client);
-	menu.AddItem(sInfo, sHudItem);
-
-	FormatEx(sInfo, 16, "!%d", HUD_KEYOVERLAY);
-	FormatEx(sHudItem, 64, "%T", "HudKeyOverlay", client);
-	menu.AddItem(sInfo, sHudItem);
-
-	FormatEx(sInfo, 16, "!%d", HUD_HIDEWEAPON);
-	FormatEx(sHudItem, 64, "%T", "HudHideWeapon", client);
-	menu.AddItem(sInfo, sHudItem);
-
-	FormatEx(sInfo, 16, "!%d", HUD_2DVEL);
-	FormatEx(sHudItem, 64, "%T", "Hud2dVel", client);
-	menu.AddItem(sInfo, sHudItem);
-
-	if(gB_Sounds)
+	for(int i = 0; i < HUD_BITCOUNT; i++)
 	{
-		FormatEx(sInfo, 16, "!%d", HUD_NOSOUNDS);
-		FormatEx(sHudItem, 64, "%T", "HudNoRecordSounds", client);
+		FormatEx(sInfo, sizeof(sInfo), "!%d", (1 << i));
+		FormatEx(sHudItem, sizeof(sHudItem), "%T", gS_HudSettings[i], client);
 		menu.AddItem(sInfo, sHudItem);
 	}
 
@@ -144,20 +117,13 @@ void ToggleHUD(int client, int hud, bool chat)
 	{
 		char sHUDSetting[64];
 
-		switch(hud)
+		for(int i = 0; i < HUD_BITCOUNT; i++)
 		{
-			case HUD_MASTER: FormatEx(sHUDSetting, 64, "%T", "HudMaster", client);
-			case HUD_CENTER: FormatEx(sHUDSetting, 64, "%T", "HudCenter", client);
-			case HUD_ZONEHUD: FormatEx(sHUDSetting, 64, "%T", "HudZoneHud", client);
-			case HUD_OBSERVE: FormatEx(sHUDSetting, 64, "%T", "HudObserve", client);
-			case HUD_SPECTATORS: FormatEx(sHUDSetting, 64, "%T", "HudSpectators", client);
-			case HUD_KEYOVERLAY: FormatEx(sHUDSetting, 64, "%T", "HudKeyOverlay", client);
-			case HUD_HIDEWEAPON: FormatEx(sHUDSetting, 64, "%T", "HudHideWeapon", client);
-			case HUD_TOPLEFT: FormatEx(sHUDSetting, 64, "%T", "HudTopLeft", client);
-			case HUD_SYNC: FormatEx(sHUDSetting, 64, "%T", "HudSync", client);
-			case HUD_TIMELEFT: FormatEx(sHUDSetting, 64, "%T", "HudTimeLeft", client);
-			case HUD_2DVEL: FormatEx(sHUDSetting, 64, "%T", "Hud2dVel", client);
-			case HUD_NOSOUNDS: FormatEx(sHUDSetting, 64, "%T", "HudNoRecordSounds", client);
+			if(hud == (1 << i))
+			{
+				FormatEx(sHUDSetting, sizeof(sHUDSetting), "%T", gS_HudSettings[i], client);
+				break;
+			}
 		}
 
 		if((gI_HUDSettings[client] & hud) > 0)

@@ -22,53 +22,63 @@ void RegisterCommands()
 	RegConsoleCmd("sm_truevel", Command_TrueVel, "Toggles 2D ('true') velocity.");
 	RegConsoleCmd("sm_truvel", Command_TrueVel, "Toggles 2D ('true') velocity. (alias for sm_truevel)");
 	RegConsoleCmd("sm_2dvel", Command_TrueVel, "Toggles 2D ('true') velocity. (alias for sm_truevel)");
+
+	RegConsoleCmd("sm_hide", Command_Hide, "Toggle players' hiding.");
+	RegConsoleCmd("sm_unhide", Command_Hide, "Toggle players' hiding.");
 }
 
 public Action Command_Master(int client, int args)
 {
 	ToggleHUD(client, HUD_MASTER, true);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_Center(int client, int args)
 {
 	ToggleHUD(client, HUD_CENTER, true);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_ZoneHUD(int client, int args)
 {
 	ToggleHUD(client, HUD_ZONEHUD, true);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_HideWeapon(int client, int args)
 {
 	ToggleHUD(client, HUD_HIDEWEAPON, true);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_TrueVel(int client, int args)
 {
 	ToggleHUD(client, HUD_2DVEL, true);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public Action Command_Keys(int client, int args)
 {
 	ToggleHUD(client, HUD_KEYOVERLAY, true);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
+}
+
+public Action Command_Hide(int client, int args)
+{
+	ToggleHUD(client, HUD_HIDEPLAYERS, true);
+
+	return Plugin_Continue;
 }
 
 public Action Command_HUD(int client, int args)
 {
 	ShowHUDMenu(client, 0);
 
-	return Plugin_Handled;
+	return Plugin_Continue;
 }

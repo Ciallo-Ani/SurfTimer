@@ -30,7 +30,7 @@
 #undef REQUIRE_PLUGIN
 #include <shavit/chat>
 #include <shavit/checkpoints>
-#include <shavit/rankings>
+#include <shavit/zones>
 #include <shavit/replay-playback>
 #include <shavit/wr>
 
@@ -75,7 +75,6 @@ Convar gCV_CreateSpawnPoints = null;
 Convar gCV_DisableRadio = null;
 Convar gCV_Scoreboard = null;
 Convar gCV_WeaponCommands = null;
-Convar gCV_PlayerOpacity = null;
 Convar gCV_StaticPrestrafe = null;
 Convar gCV_NoclipMe = null;
 Convar gCV_AdvertisementInterval = null;
@@ -106,9 +105,7 @@ DynamicHook gH_IsSpawnPointValid = null;
 
 // modules
 bool gB_Checkpoints = false;
-bool gB_Rankings = false;
 bool gB_Replay = false;
-bool gB_Zones = false;
 bool gB_Chat = false;
 
 // timer settings
@@ -127,7 +124,6 @@ stylestrings_t gS_StyleStrings[STYLE_LIMIT];
 #include "shavit-misc/misc/fixduck.sp"
 #include "shavit-misc/misc/fixspawnpoint.sp"
 #include "shavit-misc/misc/giveweapons.sp"
-#include "shavit-misc/misc/hide.sp"
 #include "shavit-misc/misc/mapfixes.sp"
 #include "shavit-misc/misc/movement.sp"
 #include "shavit-misc/misc/noclip.sp"
@@ -186,9 +182,7 @@ public void OnPluginStart()
 
 	// modules
 	gB_Checkpoints = LibraryExists("shavit-checkpoints");
-	gB_Rankings = LibraryExists("shavit-rankings");
 	gB_Replay = LibraryExists("shavit-replay-playback");
-	gB_Zones = LibraryExists("shavit-zones");
 	gB_Chat = LibraryExists("shavit-chat");
 }
 
@@ -300,17 +294,9 @@ public void OnLibraryAdded(const char[] name)
 	{
 		gB_Checkpoints = true;
 	}
-	else if(StrEqual(name, "shavit-rankings"))
-	{
-		gB_Rankings = true;
-	}
 	else if(StrEqual(name, "shavit-replay-playback"))
 	{
 		gB_Replay = true;
-	}
-	else if(StrEqual(name, "shavit-zones"))
-	{
-		gB_Zones = true;
 	}
 	else if(StrEqual(name, "shavit-chat"))
 	{
@@ -324,17 +310,9 @@ public void OnLibraryRemoved(const char[] name)
 	{
 		gB_Checkpoints = false;
 	}
-	else if(StrEqual(name, "shavit-rankings"))
-	{
-		gB_Rankings = false;
-	}
 	else if(StrEqual(name, "shavit-replay-playback"))
 	{
 		gB_Replay = false;
-	}
-	else if(StrEqual(name, "shavit-zones"))
-	{
-		gB_Zones = false;
 	}
 	else if(StrEqual(name, "shavit-chat"))
 	{
@@ -419,7 +397,6 @@ public void OnClientPutInServer(int client)
 
 	OnClientPutInServer_HookWeaponDrop(client);
 	OnClientPutInServer_HookDamage(client);
-	OnClientPutInServer_Hide(client);
 
 	OnClientPutInServer_InitWeapon(client);
 	OnClientPutInServer_InitNoclip(client);
@@ -493,6 +470,28 @@ public void Shavit_OnWorldRecord(int client, int style, float time, int jumps, i
 	Shavit_OnWorldRecord_SendWRMessage(client, style, track);
 }
 
+public void Shavit_OnPause(int client, int track)
+{
+	if(Shavit_GetClientTime(client) != 0.0)
+	{
+		Shavit_PrintToChat(client, "输入{palered}!pause{default}恢复计时器");
+	}
+	else
+	{
+		char sTrackCommand[8];
+		if(track == 0)
+		{
+			FormatEx(sTrackCommand, sizeof(sTrackCommand), "!r");
+		}
+		else
+		{
+			FormatEx(sTrackCommand, sizeof(sTrackCommand), "!b%d", track);
+		}
+
+		Shavit_PrintToChat(client, "输入{palered}%s{default}恢复计时器", sTrackCommand);
+	}
+}
+
 public void Shavit_OnRestart(int client, int track)
 {
 	SetEntPropFloat(client, Prop_Send, "m_flStamina", 0.0);
@@ -505,6 +504,8 @@ public Action Shavit_OnRestartPre(int client, int track)
 		CS_SwitchTeam(client, GetRandomInt(2, 3));
 
 		CS_RespawnPlayer(client);
+
+		Shavit_RestartTimer(client, track);
 
 		return Plugin_Handled;
 	}
@@ -522,7 +523,7 @@ public Action Respawn(Handle timer, any data)
 
 		if(gCV_RespawnOnRestart.BoolValue)
 		{
-			RestartTimer(client, Track_Main);
+			Shavit_RestartTimer(client, Track_Main);
 		}
 	}
 
@@ -546,12 +547,6 @@ public void Player_Spawn(Event event, const char[] name, bool dontBroadcast)
 	if(gCV_NoBlock.BoolValue)
 	{
 		SetEntProp(client, Prop_Data, "m_CollisionGroup", 2);
-	}
-
-	if(gCV_PlayerOpacity.IntValue != -1)
-	{
-		SetEntityRenderMode(client, RENDER_TRANSCOLOR);
-		SetEntityRenderColor(client, 255, 255, 255, gCV_PlayerOpacity.IntValue);
 	}
 }
 
@@ -580,6 +575,7 @@ public Action Player_Notifications(Event event, const char[] name, bool dontBroa
 	}
 
 	RemoveRagdoll(client);
+	Shavit_SetClientSpeed(client, 1.0);
 
 	return Plugin_Continue;
 }
@@ -620,15 +616,14 @@ static void CreateConVars()
 	gCV_DisableRadio = new Convar("shavit_misc_disableradio", "1", "Block radio commands.\n0 - Disabled (radio commands work)\n1 - Enabled (radio commands are blocked)", 0, true, 0.0, true, 1.0);
 	gCV_Scoreboard = new Convar("shavit_misc_scoreboard", "1", "Manipulate scoreboard so score is -{time} and deaths are {rank})?\nDeaths part requires shavit-rankings.\n0 - Disabled\n1 - Enabled", 0, true, 0.0, true, 1.0);
 	gCV_WeaponCommands = new Convar("shavit_misc_weaponcommands", "2", "Enable sm_usp, sm_glock and sm_knife?\n0 - Disabled\n1 - Enabled\n2 - Also give infinite reserved ammo.\n3 - Also give infinite clip ammo.", 0, true, 0.0, true, 3.0);
-	gCV_PlayerOpacity = new Convar("shavit_misc_playeropacity", "69", "Player opacity (alpha) to set on spawn.\n-1 - Disabled\nValue can go up to 255. 0 for invisibility.", 0, true, -1.0, true, 255.0);
 	gCV_StaticPrestrafe = new Convar("shavit_misc_staticprestrafe", "1", "Force prestrafe for every pistol.\n250 is the default value and some styles will have 260.\n0 - Disabled\n1 - Enabled", 0, true, 0.0, true, 1.0);
 	gCV_NoclipMe = new Convar("shavit_misc_noclipme", "1", "Allow +noclip, sm_p and all the noclip commands?\n0 - Disabled\n1 - Enabled\n2 - requires 'admin_noclipme' override or ADMFLAG_CHEATS flag.", 0, true, 0.0, true, 2.0);
-	gCV_AdvertisementInterval = new Convar("shavit_misc_advertisementinterval", "600.0", "Interval between each chat advertisement.\nConfiguration file for those is configs/shavit-advertisements.cfg.\nSet to 0.0 to disable.\nRequires server restart for changes to take effect.", 0, true, 0.0);
+	gCV_AdvertisementInterval = new Convar("shavit_misc_advertisementinterval", "60.0", "Interval between each chat advertisement.\nConfiguration file for those is configs/shavit-advertisements.cfg.\nSet to 0.0 to disable.\nRequires server restart for changes to take effect.", 0, true, 0.0);
 	gCV_RemoveRagdolls = new Convar("shavit_misc_removeragdolls", "1", "Remove ragdolls after death?\n0 - Disabled\n1 - Only remove replay bot ragdolls.\n2 - Remove all ragdolls.", 0, true, 0.0, true, 2.0);
 	gCV_ClanTag = new Convar("shavit_misc_clantag", "{tr}{styletag} :: {time}", "Custom clantag for players.\n0 - Disabled\n{styletag} - style tag.\n{style} - style name.\n{time} - formatted time.\n{tr} - first letter of track.\n{rank} - player rank.\n{cr} - player's chatrank from shavit-chat, trimmed, with no colors", 0);
 	gCV_DropAll = new Convar("shavit_misc_dropall", "1", "Allow all weapons to be dropped?\n0 - Disabled\n1 - Enabled", 0, true, 0.0, true, 1.0);
 	gCV_SpectatorList = new Convar("shavit_misc_speclist", "1", "Who to show in !specs?\n0 - everyone\n1 - all admins (admin_speclisthide override to bypass)\n2 - players you can target", 0, true, 0.0, true, 2.0);
-	gCV_HideChatCommands = new Convar("shavit_misc_hidechatcmds", "1", "Hide commands from chat?\n0 - Disabled\n1 - Enabled", 0, true, 0.0, true, 1.0);
+	gCV_HideChatCommands = new Convar("shavit_misc_hidechatcmds", "0", "Hide commands from chat?\n0 - Disabled\n1 - Enabled", 0, true, 0.0, true, 1.0);
 	gCV_WRMessages = new Convar("shavit_misc_wrmessages", "3", "How many \"NEW <style> WR!!!\" messages to print?\n0 - Disabled", 0,  true, 0.0, true, 100.0);
 	gCV_BhopSounds = new Convar("shavit_misc_bhopsounds", "1", "Should bhop (landing and jumping) sounds be muted?\n0 - Disabled\n1 - Blocked while !hide is enabled\n2 - Always blocked", 0,  true, 0.0, true, 2.0);
 	gCV_BotFootsteps = new Convar("shavit_misc_botfootsteps", "1", "Enable footstep sounds for replay bots. Only works if shavit_misc_bhopsounds is less than 2.", 0, true, 0.0, true, 1.0);
@@ -696,12 +691,4 @@ static void LoadDHooks()
 	}
 
 	delete hGameData;
-}
-
-static void RestartTimer(int client, int track)
-{
-	if(gB_Zones && Shavit_ZoneExists(Zone_Start, track))
-	{
-		Shavit_RestartTimer(client, track);
-	}
 }
